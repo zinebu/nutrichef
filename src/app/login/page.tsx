@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { CherryLogo } from "@/components/layout/CherryLogo";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { APP_NAME } from "@/lib/constants";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,20 +41,14 @@ export default function LoginPage() {
     router.refresh();
   };
 
-  const handleDemo = () => {
-    router.push("/");
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <div className="text-5xl mb-4">🍒</div>
-          <h1 className="text-2xl font-bold">{APP_NAME}</h1>
-          <p className="text-muted text-sm mt-1">Recettes & courses</p>
+        <div className="text-center animate-logo-in">
+          <CherryLogo size="xl" className="justify-center" />
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4 animate-fade-up stagger-2">
           <Input
             label="Email"
             type="email"
@@ -71,20 +65,19 @@ export default function LoginPage() {
             placeholder="••••••••"
             required
           />
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Connexion..." : "Se connecter"}
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          <Button type="submit" className="w-full rounded-full" disabled={loading}>
+            {loading ? "..." : "Connexion"}
           </Button>
         </form>
 
-        <div className="space-y-3">
-          <Button variant="secondary" className="w-full" onClick={handleDemo}>
-            Continuer en mode démo
+        <div className="space-y-3 animate-fade-up stagger-3">
+          <Button variant="ghost" className="w-full" onClick={() => router.push("/")}>
+            Continuer sans compte
           </Button>
           <p className="text-center text-sm text-muted">
-            Pas de compte ?{" "}
             <Link href="/signup" className="text-accent">
-              S&apos;inscrire
+              Créer un compte
             </Link>
           </p>
         </div>

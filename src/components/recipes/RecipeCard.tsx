@@ -3,9 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, Clock } from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import { RECIPE_CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
+import { RECIPE_CATEGORIES } from "@/lib/constants";
 import type { Recipe } from "@/types";
 
 interface RecipeCardProps {
@@ -18,52 +17,54 @@ export function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
     RECIPE_CATEGORIES.find((c) => c.value === recipe.category)?.label ?? recipe.category;
 
   return (
-    <Link href={`/recettes/${recipe.id}`}>
-      <Card className="flex gap-3 p-3 items-center">
-        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-surface-elevated shrink-0">
+    <Link href={`/recettes/${recipe.id}`} className="block tap-scale">
+      <div className="flex gap-3 p-3 items-center rounded-xl bg-surface border border-border active:border-accent/40 transition-colors duration-200">
+        <div className="relative w-14 h-14 rounded-full overflow-hidden bg-accent/10 shrink-0">
           {recipe.photo_url ? (
             <Image
               src={recipe.photo_url}
               alt={recipe.name}
               fill
               className="object-cover"
-              sizes="64px"
+              sizes="56px"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-2xl">🍒</div>
+            <div className="absolute inset-0 flex items-center justify-center text-xl">🍒</div>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-sm truncate">{recipe.name}</h3>
           <p className="text-xs text-muted">{categoryLabel}</p>
-          <div className="flex items-center gap-2 text-xs text-muted mt-0.5">
-            {recipe.calories_per_serving && (
-              <span>{Math.round(recipe.calories_per_serving)} kcal</span>
-            )}
-            {recipe.prep_time_minutes && (
-              <span className="flex items-center gap-0.5">
-                <Clock className="w-3 h-3" />
-                {recipe.prep_time_minutes} min
-              </span>
-            )}
-          </div>
+          {(recipe.calories_per_serving || recipe.prep_time_minutes) && (
+            <p className="text-xs text-muted mt-0.5 flex items-center gap-2">
+              {recipe.calories_per_serving && (
+                <span>{Math.round(recipe.calories_per_serving)} kcal</span>
+              )}
+              {recipe.prep_time_minutes && (
+                <span className="flex items-center gap-0.5">
+                  <Clock className="w-3 h-3" />
+                  {recipe.prep_time_minutes}m
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <button
           onClick={(e) => {
             e.preventDefault();
             onToggleFavorite?.(recipe.id);
+            e.currentTarget.classList.add("animate-pop");
           }}
           className="p-2 shrink-0"
-          aria-label={recipe.is_favorite ? "Retirer des favoris" : "Ajouter aux favoris"}
         >
           <Heart
             className={cn(
-              "w-5 h-5",
-              recipe.is_favorite ? "fill-accent text-accent" : "text-muted"
+              "w-5 h-5 transition-all duration-200",
+              recipe.is_favorite ? "fill-accent text-accent scale-110" : "text-muted"
             )}
           />
         </button>
-      </Card>
+      </div>
     </Link>
   );
 }

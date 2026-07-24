@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Caveat } from "next/font/google";
 import "./globals.css";
 import { APP_NAME } from "@/lib/constants";
 
@@ -8,9 +8,15 @@ const geist = Geist({
   subsets: ["latin"],
 });
 
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "Gérez vos recettes, nutrition et listes de courses",
+  description: "Recettes, nutrition et courses",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -44,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${geist.variable} h-full`}>
+    <html lang="fr" className={`${geist.variable} ${caveat.variable} h-full`}>
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

@@ -34,7 +34,7 @@ export default function ProfilPage() {
 
   return (
     <>
-      <MobileHeader title="Profil" />
+      <MobileHeader title="Profil" handwritten />
 
       <main className="px-4 py-4 space-y-4">
         <Card elevated className="flex items-center gap-4">

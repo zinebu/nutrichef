@@ -1,110 +1,86 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Heart, ArrowRight } from "lucide-react";
+import { Plus } from "lucide-react";
 import { MobileHeader } from "@/components/layout/MobileHeader";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { useRecipes } from "@/hooks/useAppData";
-import { APP_NAME } from "@/lib/constants";
+
+const quickLinks = [
+  { href: "/recettes", label: "Recettes", emoji: "📖" },
+  { href: "/recettes/nouvelle", label: "Nouvelle", emoji: "✨" },
+  { href: "/courses", label: "Courses", emoji: "🛒" },
+];
 
 export default function DashboardPage() {
   const { recipes, loading, toggleFavorite } = useRecipes();
-
-  const favorites = recipes.filter((r) => r.is_favorite).slice(0, 3);
-  const recent = recipes.slice(0, 3);
+  const recent = recipes.slice(0, 5);
 
   return (
     <>
       <MobileHeader
-        title={APP_NAME}
+        showLogo
         action={
           <Link href="/recettes/nouvelle">
-            <Button size="sm">
-              <Plus className="w-4 h-4" />
+            <Button size="sm" className="rounded-full w-9 h-9 p-0">
+              <Plus className="w-5 h-5" />
             </Button>
           </Link>
         }
       />
 
-      <main className="px-4 py-4 space-y-6">
-        <div className="flex gap-4 text-center">
-          <div className="flex-1">
-            <p className="text-2xl font-bold text-accent">{recipes.length}</p>
-            <p className="text-xs text-muted">Recettes</p>
-          </div>
-          <div className="w-px bg-border" />
-          <div className="flex-1">
-            <p className="text-2xl font-bold text-accent">
-              {recipes.filter((r) => r.is_favorite).length}
-            </p>
-            <p className="text-xs text-muted">Favoris</p>
-          </div>
+      <main className="px-4 py-5 space-y-6 max-w-lg mx-auto">
+        <div className="flex gap-2 animate-fade-up">
+          {quickLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="tap-scale flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl bg-surface border border-border"
+            >
+              <span className="text-2xl">{link.emoji}</span>
+              <span className="text-xs text-muted">{link.label}</span>
+            </Link>
+          ))}
         </div>
 
-        {favorites.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-medium text-sm flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-accent" />
-                Favoris
-              </h2>
-              <Link href="/recettes?favorites=1" className="text-xs text-accent">
-                Tout voir
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {favorites.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  onToggleFavorite={toggleFavorite}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-medium text-sm">Récentes</h2>
-            <Link href="/recettes" className="text-xs text-accent flex items-center gap-1">
-              Toutes <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+        <section className="animate-fade-up stagger-2">
+          <h2 className="font-handwritten text-2xl text-accent mb-3">Récentes</h2>
           {loading ? (
             <div className="space-y-2">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-24 rounded-xl bg-surface animate-pulse" />
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-16 rounded-xl bg-surface animate-pulse"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
               ))}
             </div>
           ) : recent.length > 0 ? (
             <div className="space-y-2">
-              {recent.map((recipe) => (
-                <RecipeCard
+              {recent.map((recipe, i) => (
+                <div
                   key={recipe.id}
-                  recipe={recipe}
-                  onToggleFavorite={toggleFavorite}
-                />
+                  className="animate-fade-up"
+                  style={{ animationDelay: `${i * 0.06}s`, opacity: 0 }}
+                >
+                  <RecipeCard
+                    recipe={recipe}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                </div>
               ))}
             </div>
           ) : (
-            <Card className="text-center py-6 space-y-3">
-              <p className="text-sm text-muted">Aucune recette</p>
-              <Link href="/recettes/nouvelle">
-                <Button size="sm">Ajouter</Button>
-              </Link>
-            </Card>
+            <Link
+              href="/recettes/nouvelle"
+              className="tap-scale block text-center py-10 rounded-2xl border-2 border-dashed border-accent/30"
+            >
+              <span className="text-4xl block mb-2">🍒</span>
+              <p className="font-handwritten text-2xl text-accent">Ta première recette</p>
+            </Link>
           )}
         </section>
-
-        <Link href="/courses">
-          <Card className="flex items-center justify-between">
-            <span className="text-sm font-medium">Liste de courses</span>
-            <ArrowRight className="w-4 h-4 text-accent" />
-          </Card>
-        </Link>
       </main>
     </>
   );

@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { CherryLogo } from "@/components/layout/CherryLogo";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { APP_NAME } from "@/lib/constants";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -68,9 +68,9 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Créer un compte</h1>
-          <p className="text-muted text-sm mt-1">{APP_NAME}</p>
+        <div className="text-center animate-logo-in">
+          <CherryLogo size="lg" className="justify-center" />
+          <p className="text-sm text-muted mt-3">Créer un compte</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">

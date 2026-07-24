@@ -10,27 +10,22 @@ export default function CoursesPage() {
   const { list, generateFromMealPlan, toggleItem, removeItem, addItem } =
     useShoppingList(recipes);
 
-  const handleGenerate = () => {
-    if (mealPlan) generateFromMealPlan(mealPlan);
-  };
-
   return (
     <>
-      <MobileHeader title="Courses" subtitle="Planning & liste" />
+      <MobileHeader title="Courses" handwritten />
 
-      <main className="px-4 py-4 space-y-8">
-        <section>
-          <h2 className="font-semibold mb-3">Planning de la semaine</h2>
+      <main className="px-4 py-4 space-y-8 max-w-lg mx-auto">
+        <section className="animate-fade-up">
           <WeeklyPlanner
             mealPlan={mealPlan}
             recipes={recipes}
             onSelectRecipe={setDayRecipe}
-            onGenerateList={handleGenerate}
+            onGenerateList={() => mealPlan && generateFromMealPlan(mealPlan)}
           />
         </section>
 
-        <section>
-          <h2 className="font-semibold mb-3">Liste de courses</h2>
+        <section className="animate-fade-up stagger-2">
+          <h2 className="font-handwritten text-2xl text-accent mb-3">Ma liste</h2>
           <ShoppingListView
             items={list?.items ?? []}
             onToggle={toggleItem}

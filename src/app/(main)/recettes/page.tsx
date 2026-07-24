@@ -29,41 +29,43 @@ export default function RecipesPage() {
     <>
       <MobileHeader
         title="Recettes"
-        subtitle={`${filtered.length} recette${filtered.length !== 1 ? "s" : ""}`}
+        handwritten
         action={
           <Link href="/recettes/nouvelle">
-            <Button size="sm">
-              <Plus className="w-4 h-4" />
+            <Button size="sm" className="rounded-full w-9 h-9 p-0">
+              <Plus className="w-5 h-5" />
             </Button>
           </Link>
         }
       />
 
-      <main className="px-4 py-4 space-y-4">
+      <main className="px-4 py-4 space-y-4 max-w-lg mx-auto">
         <RecipeFiltersPanel filters={filters} onChange={setFilters} />
 
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 rounded-3xl bg-surface-elevated animate-pulse" />
+              <div key={i} className="h-16 rounded-xl bg-surface animate-pulse" />
             ))}
           </div>
         ) : filtered.length > 0 ? (
-          <div className="space-y-3">
-            {filtered.map((recipe) => (
-              <RecipeCard
+          <div className="space-y-2">
+            {filtered.map((recipe, i) => (
+              <div
                 key={recipe.id}
-                recipe={recipe}
-                onToggleFavorite={toggleFavorite}
-              />
+                className="animate-fade-up"
+                style={{ animationDelay: `${i * 0.04}s`, opacity: 0 }}
+              >
+                <RecipeCard recipe={recipe} onToggleFavorite={toggleFavorite} />
+              </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-muted">
-            <p className="text-4xl mb-3">🍳</p>
-            <p className="text-sm">Aucune recette trouvée</p>
-            <Link href="/recettes/nouvelle" className="text-accent text-sm mt-2 inline-block">
-              Créer une recette
+          <div className="text-center py-12">
+            <p className="text-4xl mb-2">🍒</p>
+            <p className="font-handwritten text-2xl text-accent">Rien ici</p>
+            <Link href="/recettes/nouvelle" className="text-sm text-muted mt-2 inline-block">
+              + Ajouter
             </Link>
           </div>
         )}

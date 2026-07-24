@@ -17,7 +17,7 @@ export default function NewRecipePage() {
 
   return (
     <>
-      <MobileHeader title="Nouvelle recette" showBack />
+      <MobileHeader title="Nouvelle" handwritten showBack />
       <main className="px-4 py-4">
         <RecipeForm onSubmit={handleSubmit} />
       </main>
