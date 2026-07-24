@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Heart, Trash2, Flame, Clock } from "lucide-react";
+import { Heart, Trash2, Flame, Clock, UtensilsCrossed } from "lucide-react";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -88,7 +88,9 @@ export default function RecipeDetailPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={recipe.photo_url} alt={recipe.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-6xl">🍽️</div>
+            <div className="absolute inset-0 flex items-center justify-center bg-accent/5">
+              <UtensilsCrossed className="w-12 h-12 text-accent/40" strokeWidth={1.5} />
+            </div>
           )}
         </div>
 

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { CherryLogo } from "@/components/layout/CherryLogo";
+import { Mail } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -52,7 +53,7 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center space-y-4 max-w-sm">
-          <div className="text-5xl">✉️</div>
+          <Mail className="w-12 h-12 text-accent mx-auto" strokeWidth={1.5} />
           <h1 className="text-xl font-bold">Vérifiez votre email</h1>
           <p className="text-muted text-sm">
             Un lien de confirmation a été envoyé à {email}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, Clock } from "lucide-react";
+import { Heart, Clock, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { RECIPE_CATEGORIES } from "@/lib/constants";
 import type { Recipe } from "@/types";
@@ -19,7 +19,7 @@ export function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
   return (
     <Link href={`/recettes/${recipe.id}`} className="block tap-scale">
       <div className="flex gap-3 p-3 items-center rounded-xl bg-surface border border-border active:border-accent/40 transition-colors duration-200">
-        <div className="relative w-14 h-14 rounded-full overflow-hidden bg-accent/10 shrink-0">
+        <div className="relative w-14 h-14 rounded-full overflow-hidden bg-accent/10 shrink-0 flex items-center justify-center">
           {recipe.photo_url ? (
             <Image
               src={recipe.photo_url}
@@ -29,7 +29,7 @@ export function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
               sizes="56px"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-xl">🍒</div>
+            <UtensilsCrossed className="w-5 h-5 text-accent/60" strokeWidth={1.5} />
           )}
         </div>
         <div className="flex-1 min-w-0">

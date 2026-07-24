@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, BookOpen } from "lucide-react";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Button } from "@/components/ui/Button";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
@@ -62,7 +62,7 @@ export default function RecipesPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-4xl mb-2">🍒</p>
+            <BookOpen className="w-10 h-10 text-accent/50 mx-auto mb-2" strokeWidth={1.5} />
             <p className="font-handwritten text-2xl text-accent">Rien ici</p>
             <Link href="/recettes/nouvelle" className="text-sm text-muted mt-2 inline-block">
               + Ajouter

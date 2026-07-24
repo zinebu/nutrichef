@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 import { APP_NAME } from "@/lib/constants";
+import { CherryIcon } from "./CherryIcon";
 
 interface CherryLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -8,10 +9,10 @@ interface CherryLogoProps {
 }
 
 const sizes = {
-  sm: { icon: "text-xl", text: "text-2xl" },
-  md: { icon: "text-2xl", text: "text-3xl" },
-  lg: { icon: "text-3xl", text: "text-4xl" },
-  xl: { icon: "text-4xl", text: "text-5xl" },
+  sm: { icon: 20, text: "text-2xl" },
+  md: { icon: 26, text: "text-3xl" },
+  lg: { icon: 32, text: "text-4xl" },
+  xl: { icon: 40, text: "text-5xl" },
 };
 
 export function CherryLogo({ size = "md", className, animate = false }: CherryLogoProps) {
@@ -20,17 +21,13 @@ export function CherryLogo({ size = "md", className, animate = false }: CherryLo
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 leading-none",
+        "inline-flex items-center gap-2 leading-none text-accent",
         animate && "animate-logo-in",
         className
       )}
     >
-      <span className={cn(s.icon, "select-none")} role="img" aria-hidden>
-        🍒
-      </span>
-      <span className={cn(s.text, "font-handwritten text-accent tracking-tight")}>
-        {APP_NAME}
-      </span>
+      <CherryIcon size={s.icon} />
+      <span className={cn(s.text, "font-handwritten tracking-tight")}>{APP_NAME}</span>
     </div>
   );
 }

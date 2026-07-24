@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, Heart } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -68,7 +68,8 @@ export function RecipeFiltersPanel({ filters, onChange }: RecipeFiltersProps) {
             onChange({ ...filters, favoritesOnly: !filters.favoritesOnly })
           }
         >
-          ❤️ Favoris
+          <Heart className="w-4 h-4" />
+          Favoris
         </Button>
         <Button
           variant={showAdvanced ? "primary" : "secondary"}
