@@ -1,6 +1,6 @@
 import type { CookingType, RecipeCategory, RecipeTag } from "@/types";
 
-export const APP_NAME = "NutriChef";
+export const APP_NAME = "Cherry";
 
 export const RECIPE_CATEGORIES: { value: RecipeCategory; label: string }[] = [
   { value: "petit_dejeuner", label: "Petit déjeuner" },
@@ -21,14 +21,14 @@ export const COOKING_TYPES: { value: CookingType; label: string }[] = [
 ];
 
 export const RECIPE_TAGS: { value: RecipeTag; label: string; color: string }[] = [
-  { value: "healthy", label: "Healthy", color: "bg-emerald-500/20 text-emerald-400" },
-  { value: "sucre", label: "Sucré", color: "bg-pink-500/20 text-pink-400" },
-  { value: "proteine", label: "Protéiné", color: "bg-blue-500/20 text-blue-400" },
-  { value: "rapide", label: "Rapide", color: "bg-amber-500/20 text-amber-400" },
-  { value: "vegetarien", label: "Végétarien", color: "bg-green-500/20 text-green-400" },
-  { value: "sans_gluten", label: "Sans gluten", color: "bg-orange-500/20 text-orange-400" },
-  { value: "leger", label: "Léger", color: "bg-cyan-500/20 text-cyan-400" },
-  { value: "gourmand", label: "Gourmand", color: "bg-purple-500/20 text-purple-400" },
+  { value: "healthy", label: "Healthy", color: "bg-red-500/10 text-red-600" },
+  { value: "sucre", label: "Sucré", color: "bg-red-500/15 text-red-500" },
+  { value: "proteine", label: "Protéiné", color: "bg-neutral-500/10 text-neutral-600" },
+  { value: "rapide", label: "Rapide", color: "bg-red-500/10 text-red-400" },
+  { value: "vegetarien", label: "Végétarien", color: "bg-red-500/10 text-red-600" },
+  { value: "sans_gluten", label: "Sans gluten", color: "bg-neutral-500/10 text-neutral-500" },
+  { value: "leger", label: "Léger", color: "bg-red-500/10 text-red-400" },
+  { value: "gourmand", label: "Gourmand", color: "bg-red-600/15 text-red-700" },
 ];
 
 export const DAYS_OF_WEEK = [

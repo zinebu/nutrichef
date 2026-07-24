@@ -43,7 +43,7 @@ export default function ProfilPage() {
           </div>
           <div>
             <p className="font-semibold">{email ?? "Utilisateur"}</p>
-            <p className="text-sm text-muted">Compte NutriChef</p>
+            <p className="text-sm text-muted">Compte Cherry</p>
           </div>
         </Card>
 

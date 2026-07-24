@@ -53,8 +53,8 @@ export function NutritionPanel({ nutrition }: NutritionPanelProps) {
       </div>
 
       {nutrition.tips && (
-        <div className="rounded-2xl bg-emerald-500/10 p-3 border border-emerald-500/20">
-          <p className="text-xs text-emerald-400 font-medium mb-1">💡 Conseil</p>
+        <div className="rounded-xl bg-accent/10 p-3 border border-accent/20">
+          <p className="text-xs text-accent font-medium mb-1">Conseil</p>
           <p className="text-sm">{nutrition.tips}</p>
         </div>
       )}

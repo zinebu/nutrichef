@@ -1,31 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Flame, Heart, ArrowRight } from "lucide-react";
+import { Plus, Heart, ArrowRight } from "lucide-react";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RecipeCard } from "@/components/recipes/RecipeCard";
 import { useRecipes } from "@/hooks/useAppData";
+import { APP_NAME } from "@/lib/constants";
 
 export default function DashboardPage() {
   const { recipes, loading, toggleFavorite } = useRecipes();
 
   const favorites = recipes.filter((r) => r.is_favorite).slice(0, 3);
-  const recent = recipes.slice(0, 4);
-  const totalCalories = recipes.reduce(
-    (sum, r) => sum + (r.calories_per_serving ?? 0),
-    0
-  );
-  const avgCalories = recipes.length
-    ? Math.round(totalCalories / recipes.length)
-    : 0;
+  const recent = recipes.slice(0, 3);
 
   return (
     <>
       <MobileHeader
-        title="NutriChef"
-        subtitle="Votre assistant alimentaire"
+        title={APP_NAME}
         action={
           <Link href="/recettes/nouvelle">
             <Button size="sm">
@@ -36,44 +29,32 @@ export default function DashboardPage() {
       />
 
       <main className="px-4 py-4 space-y-6">
-        <div className="grid grid-cols-2 gap-3">
-          <Card elevated className="col-span-2 bg-gradient-to-br from-accent/20 to-accent/5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted">Calories moyennes</p>
-                <p className="text-3xl font-bold text-accent">{avgCalories}</p>
-                <p className="text-xs text-muted">kcal / portion</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-accent/20">
-                <Flame className="w-8 h-8 text-accent" />
-              </div>
-            </div>
-          </Card>
-
-          <Card elevated>
+        <div className="flex gap-4 text-center">
+          <div className="flex-1">
+            <p className="text-2xl font-bold text-accent">{recipes.length}</p>
             <p className="text-xs text-muted">Recettes</p>
-            <p className="text-2xl font-bold">{recipes.length}</p>
-          </Card>
-          <Card elevated>
-            <p className="text-xs text-muted">Favoris</p>
-            <p className="text-2xl font-bold">
+          </div>
+          <div className="w-px bg-border" />
+          <div className="flex-1">
+            <p className="text-2xl font-bold text-accent">
               {recipes.filter((r) => r.is_favorite).length}
             </p>
-          </Card>
+            <p className="text-xs text-muted">Favoris</p>
+          </div>
         </div>
 
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Heart className="w-4 h-4 text-red-400" />
-              Favoris
-            </h2>
-            <Link href="/recettes?favorites=1" className="text-sm text-accent">
-              Voir tout
-            </Link>
-          </div>
-          {favorites.length > 0 ? (
-            <div className="space-y-3">
+        {favorites.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-medium text-sm flex items-center gap-1.5">
+                <Heart className="w-4 h-4 text-accent" />
+                Favoris
+              </h2>
+              <Link href="/recettes?favorites=1" className="text-xs text-accent">
+                Tout voir
+              </Link>
+            </div>
+            <div className="space-y-2">
               {favorites.map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
@@ -82,28 +63,24 @@ export default function DashboardPage() {
                 />
               ))}
             </div>
-          ) : (
-            <Card className="text-center py-6 text-muted text-sm">
-              Aucun favori pour le moment
-            </Card>
-          )}
-        </section>
+          </section>
+        )}
 
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">Repas récents</h2>
-            <Link href="/recettes" className="text-sm text-accent flex items-center gap-1">
+            <h2 className="font-medium text-sm">Récentes</h2>
+            <Link href="/recettes" className="text-xs text-accent flex items-center gap-1">
               Toutes <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[1, 2].map((i) => (
-                <div key={i} className="h-32 rounded-3xl bg-surface-elevated animate-pulse" />
+                <div key={i} className="h-24 rounded-xl bg-surface animate-pulse" />
               ))}
             </div>
           ) : recent.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recent.map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
@@ -113,22 +90,19 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <Card className="text-center py-8 space-y-3">
-              <p className="text-muted text-sm">Commencez par ajouter votre première recette</p>
+            <Card className="text-center py-6 space-y-3">
+              <p className="text-sm text-muted">Aucune recette</p>
               <Link href="/recettes/nouvelle">
-                <Button>Ajouter une recette</Button>
+                <Button size="sm">Ajouter</Button>
               </Link>
             </Card>
           )}
         </section>
 
         <Link href="/courses">
-          <Card elevated className="flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer">
-            <div>
-              <p className="font-medium">Liste de courses</p>
-              <p className="text-sm text-muted">Planifiez votre semaine</p>
-            </div>
-            <ArrowRight className="w-5 h-5 text-accent" />
+          <Card className="flex items-center justify-between">
+            <span className="text-sm font-medium">Liste de courses</span>
+            <ArrowRight className="w-4 h-4 text-accent" />
           </Card>
         </Link>
       </main>

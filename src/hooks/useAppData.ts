@@ -12,9 +12,9 @@ import type {
 import { getWeekStart, mergeIngredients } from "@/lib/utils/shopping-list";
 
 const STORAGE_KEYS = {
-  recipes: "nutrichef_recipes",
-  mealPlan: "nutrichef_meal_plan",
-  shoppingList: "nutrichef_shopping_list",
+  recipes: "cherry_recipes",
+  mealPlan: "cherry_meal_plan",
+  shoppingList: "cherry_shopping_list",
 };
 
 function loadFromStorage<T>(key: string, fallback: T): T {

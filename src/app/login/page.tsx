@@ -49,9 +49,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <div className="text-5xl mb-4">🥗</div>
+          <div className="text-5xl mb-4">🍒</div>
           <h1 className="text-2xl font-bold">{APP_NAME}</h1>
-          <p className="text-muted text-sm mt-1">Gérez vos recettes et courses</p>
+          <p className="text-muted text-sm mt-1">Recettes & courses</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">

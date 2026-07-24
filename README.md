@@ -1,4 +1,4 @@
-# NutriChef 🥗
+# Cherry 🍒
 
 Application PWA mobile-first pour gérer vos recettes, analyser la nutrition avec l'IA, planifier vos repas et générer des listes de courses.
 

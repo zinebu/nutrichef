@@ -1,4 +1,4 @@
-# NutriChef — Architecture
+# Cherry — Architecture
 
 Application PWA mobile-first de gestion alimentaire.
 
