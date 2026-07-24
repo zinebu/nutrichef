@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { NutritionPanel } from "@/components/recipes/NutritionPanel";
 import { RECIPE_CATEGORIES, RECIPE_TAGS, COOKING_TYPES } from "@/lib/constants";
 import { useRecipes } from "@/hooks/useAppData";
+import { formatPrepTime } from "@/lib/utils/format-prep-time";
 import type { Recipe, NutritionData } from "@/types";
 
 export default function RecipeDetailPage() {
@@ -121,7 +122,7 @@ export default function RecipeDetailPage() {
           {recipe.prep_time_minutes && (
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              {recipe.prep_time_minutes} min
+              {formatPrepTime(recipe.prep_time_minutes)}
             </span>
           )}
         </div>

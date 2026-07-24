@@ -52,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geist.variable} ${caveat.variable} h-full`}>
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-full antialiased font-sans">{children}</body>

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { disableDemoMode, isDemoModeClient } from "@/lib/demo";
+import { InstallAppCard } from "@/components/pwa/InstallAppCard";
 import { useRouter } from "next/navigation";
 
 export default function ProfilPage() {
@@ -71,6 +72,8 @@ export default function ProfilPage() {
             <span className="text-xs text-muted">Automatique</span>
           </div>
         </Card>
+
+        <InstallAppCard />
 
         {isDemo && (
           <Card className="bg-accent/5 border-accent/20">

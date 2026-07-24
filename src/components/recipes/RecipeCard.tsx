@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, Clock, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatPrepTime } from "@/lib/utils/format-prep-time";
 import { RECIPE_CATEGORIES } from "@/lib/constants";
 import type { Recipe } from "@/types";
 
@@ -56,7 +57,7 @@ export const RecipeCard = memo(function RecipeCard({ recipe, onToggleFavorite }:
               {recipe.prep_time_minutes && (
                 <span className="flex items-center gap-0.5">
                   <Clock className="w-3 h-3" />
-                  {recipe.prep_time_minutes}m
+                  {formatPrepTime(recipe.prep_time_minutes, { compact: true })}
                 </span>
               )}
             </p>
