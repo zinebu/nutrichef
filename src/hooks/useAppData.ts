@@ -9,7 +9,8 @@ import type {
   ShoppingList,
   ShoppingListItem,
 } from "@/types";
-import { getWeekStart, mergeIngredients } from "@/lib/utils/shopping-list";
+import { getWeekStart, mergeIngredients, categorizeIngredient } from "@/lib/utils/shopping-list";
+import { normalizeIngredientName, getIngredientKey } from "@/lib/utils/ingredient-normalize";
 
 const STORAGE_KEYS = {
   recipes: "cherry_recipes",
@@ -119,10 +120,18 @@ export function useRecipes() {
   }, [fetchRecipes]);
 
   const createRecipe = async (input: CreateRecipeInput) => {
+    const normalizedInput = {
+      ...input,
+      ingredients: input.ingredients.map((ing) => ({
+        ...ing,
+        name: normalizeIngredientName(ing.name),
+      })),
+    };
+
     const res = await fetch("/api/recipes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify(normalizedInput),
     });
     if (res.ok) {
       const recipe = await res.json();
@@ -151,7 +160,7 @@ export function useRecipes() {
       fiber_g: input.nutrition?.fiberG ?? null,
       nutrition_tips: input.nutrition?.tips ?? null,
       ai_detected_foods: input.nutrition?.detectedFoods ?? [],
-      ingredients: input.ingredients,
+      ingredients: normalizedInput.ingredients,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -361,14 +370,21 @@ export function useShoppingList(recipes: Recipe[]) {
   };
 
   const addItem = (name: string) => {
+    const normalized = normalizeIngredientName(name);
     setList((prev) => {
+      const items = [...(prev?.items ?? [])];
+      const existing = items.find(
+        (i) => normalizeIngredientName(i.name) === getIngredientKey(normalized)
+      );
+      if (existing) return prev;
+
       const newItem: ShoppingListItem = {
         id: crypto.randomUUID(),
         shopping_list_id: prev?.id ?? "local",
-        name,
+        name: normalized,
         quantity: null,
         unit: null,
-        category: "autres",
+        category: categorizeIngredient(normalized),
         is_checked: false,
         is_manual: true,
       };
@@ -377,7 +393,7 @@ export function useShoppingList(recipes: Recipe[]) {
         user_id: "local",
         meal_plan_id: prev?.meal_plan_id ?? null,
         name: prev?.name ?? "Liste de courses",
-        items: [...(prev?.items ?? []), newItem],
+        items: [...items, newItem],
       };
       saveToStorage(STORAGE_KEYS.shoppingList, updated);
       return updated;

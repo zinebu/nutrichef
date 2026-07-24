@@ -3,6 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { normalizeIngredientName } from "@/lib/utils/ingredient-normalize";
 import type { Ingredient } from "@/types";
 
 const UNITS = ["g", "ml", "cl", "L", "cuillère", "pièce", "pincée", "tranche"];
@@ -21,6 +22,15 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
     const updated = [...ingredients];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
+  };
+
+  const normalizeAt = (index: number) => {
+    const ing = ingredients[index];
+    if (!ing?.name.trim()) return;
+    const normalized = normalizeIngredientName(ing.name);
+    if (normalized !== ing.name) {
+      updateIngredient(index, "name", normalized);
+    }
   };
 
   const removeIngredient = (index: number) => {
@@ -49,6 +59,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
             placeholder="Nom"
             value={ing.name}
             onChange={(e) => updateIngredient(index, "name", e.target.value)}
+            onBlur={() => normalizeAt(index)}
             className="flex-1"
           />
           <Input

@@ -1,42 +1,60 @@
 import { INGREDIENT_CATEGORY_MAP } from "@/lib/constants";
+import {
+  formatIngredientName,
+  getIngredientKey,
+} from "@/lib/utils/ingredient-normalize";
 import type { Ingredient, ShoppingListItem } from "@/types";
 
 function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
+  return getIngredientKey(name);
 }
 
 export function categorizeIngredient(name: string): string {
-  const normalized = normalizeName(name);
+  const normalized = getIngredientKey(name);
   for (const [key, category] of Object.entries(INGREDIENT_CATEGORY_MAP)) {
     if (normalized.includes(key.replace(/_/g, " ")) || normalized.includes(key)) {
       return category;
     }
   }
-  if (/légume|legume|herbe|ail|épinard|brocoli/.test(normalized)) return "legumes";
-  if (/fruit|baie/.test(normalized)) return "fruits";
-  if (/poulet|viande|poisson|oeuf|tofu|jambon/.test(normalized)) return "proteines";
-  if (/lait|fromage|crème|beurre|yaourt/.test(normalized)) return "laitiers";
-  if (/riz|pâte|pain|farine|semoule|quinoa/.test(normalized)) return "feculents";
-  if (/épice|sel|poivre|huile|vinaigre|sauce/.test(normalized)) return "epices";
+  if (/legume|herbe|ail|epinard|brocoli|oignon|tomate|carotte|courgette|poivron/.test(normalized))
+    return "legumes";
+  if (/fruit|baie|pomme|banane|citron/.test(normalized)) return "fruits";
+  if (/poulet|viande|poisson|oeuf|tofu|jambon|crevette|saumon|thon|boeuf/.test(normalized))
+    return "proteines";
+  if (/lait|fromage|creme|beurre|yaourt/.test(normalized)) return "laitiers";
+  if (/riz|pate|pain|farine|semoule|quinoa|pomme de terre/.test(normalized)) return "feculents";
+  if (/epice|sel|poivre|huile|vinaigre|sauce|moutarde/.test(normalized)) return "epices";
   return "autres";
 }
 
-export function mergeIngredients(ingredients: Ingredient[]): Omit<ShoppingListItem, "id" | "shopping_list_id">[] {
+export function mergeIngredients(
+  ingredients: Ingredient[]
+): Omit<ShoppingListItem, "id" | "shopping_list_id">[] {
   const merged = new Map<string, Omit<ShoppingListItem, "id" | "shopping_list_id">>();
 
   for (const ing of ingredients) {
     const key = normalizeName(ing.name);
+    if (!key) continue;
+
+    const displayName = formatIngredientName(ing.name);
     const existing = merged.get(key);
 
     if (existing && existing.unit === ing.unit) {
       existing.quantity = (existing.quantity ?? 0) + ing.quantity;
+    } else if (existing && existing.unit !== ing.unit) {
+      // Même ingrédient, unités différentes → entrées séparées avec suffixe
+      const altKey = `${key}__${ing.unit}`;
+      merged.set(altKey, {
+        name: displayName,
+        quantity: ing.quantity,
+        unit: ing.unit,
+        category: categorizeIngredient(ing.name),
+        is_checked: false,
+        is_manual: false,
+      });
     } else {
       merged.set(key, {
-        name: ing.name.charAt(0).toUpperCase() + ing.name.slice(1),
+        name: displayName,
         quantity: ing.quantity,
         unit: ing.unit,
         category: categorizeIngredient(ing.name),
@@ -46,8 +64,8 @@ export function mergeIngredients(ingredients: Ingredient[]): Omit<ShoppingListIt
     }
   }
 
-  return Array.from(merged.values()).sort((a, b) =>
-    a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
+  return Array.from(merged.values()).sort(
+    (a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
   );
 }
 

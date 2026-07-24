@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeIngredientName } from "@/lib/utils/ingredient-normalize";
 import type { CreateRecipeInput } from "@/types";
 
 export async function GET() {
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
     await supabase.from("ingredients").insert(
       body.ingredients.map((ing, i) => ({
         recipe_id: recipe.id,
-        name: ing.name,
+        name: normalizeIngredientName(ing.name),
         quantity: ing.quantity,
         unit: ing.unit,
         sort_order: i,
