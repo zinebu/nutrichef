@@ -7,8 +7,7 @@ import { useRecipes, useMealPlan, useShoppingList } from "@/hooks/useAppData";
 export default function CoursesPage() {
   const { recipes } = useRecipes();
   const { mealPlan, setDayRecipe } = useMealPlan();
-  const { list, generateFromMealPlan, toggleItem, removeItem, addItem } =
-    useShoppingList(recipes);
+  const { list, generateFromMealPlan, toggleItem, removeItem, addItem } = useShoppingList();
 
   return (
     <>

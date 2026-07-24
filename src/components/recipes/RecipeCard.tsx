@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, Clock, UtensilsCrossed } from "lucide-react";
@@ -12,7 +13,7 @@ interface RecipeCardProps {
   onToggleFavorite?: (id: string) => void;
 }
 
-export function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
+export const RecipeCard = memo(function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
   const categoryLabel =
     RECIPE_CATEGORIES.find((c) => c.value === recipe.category)?.label ?? recipe.category;
 
@@ -21,13 +22,25 @@ export function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
       <div className="flex gap-3 p-3 items-center rounded-xl bg-surface border border-border active:border-accent/40 transition-colors duration-200">
         <div className="relative w-14 h-14 rounded-full overflow-hidden bg-accent/10 shrink-0 flex items-center justify-center">
           {recipe.photo_url ? (
-            <Image
-              src={recipe.photo_url}
-              alt={recipe.name}
-              fill
-              className="object-cover"
-              sizes="56px"
-            />
+            recipe.photo_url.startsWith("data:") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={recipe.photo_url}
+                alt={recipe.name}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Image
+                src={recipe.photo_url}
+                alt={recipe.name}
+                fill
+                loading="lazy"
+                className="object-cover"
+                sizes="56px"
+              />
+            )
           ) : (
             <UtensilsCrossed className="w-5 h-5 text-accent/60" strokeWidth={1.5} />
           )}
@@ -67,4 +80,4 @@ export function RecipeCard({ recipe, onToggleFavorite }: RecipeCardProps) {
       </div>
     </Link>
   );
-}
+});

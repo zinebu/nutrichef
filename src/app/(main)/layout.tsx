@@ -1,9 +1,14 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { AppDataProvider } from "@/contexts/AppDataContext";
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppDataProvider>
+      <AppShell>{children}</AppShell>
+    </AppDataProvider>
+  );
 }
