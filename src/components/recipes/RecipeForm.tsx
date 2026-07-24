@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
+import { PhotoPicker } from "@/components/recipes/PhotoPicker";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -33,13 +34,7 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
   const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setPhotoPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
+  const handlePhoto = (dataUrl: string) => setPhotoPreview(dataUrl);
 
   const toggleTag = (tag: RecipeTag) => {
     setTags((prev) =>
@@ -102,26 +97,7 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 pb-8">
-      <label className="block">
-        <div className="relative aspect-video rounded-3xl overflow-hidden bg-surface-elevated border-2 border-dashed border-border/50 cursor-pointer">
-          {photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoPreview} alt="Aperçu" className="w-full h-full object-cover" />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-muted">
-              <Camera className="w-10 h-10 mb-2" />
-              <span className="text-sm">Ajouter une photo</span>
-            </div>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handlePhoto}
-            className="absolute inset-0 opacity-0 cursor-pointer"
-          />
-        </div>
-      </label>
+      <PhotoPicker preview={photoPreview} onChange={handlePhoto} />
 
       <Input label="Nom de la recette" value={name} onChange={(e) => setName(e.target.value)} required />
 
