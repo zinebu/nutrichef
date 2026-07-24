@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LogOut, Moon, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { disableDemoMode, isDemoModeClient } from "@/lib/demo";
 import { InstallAppCard } from "@/components/pwa/InstallAppCard";
+import { ThemeSelector } from "@/components/profil/ThemeSelector";
 import { useRouter } from "next/navigation";
 
 export default function ProfilPage() {
@@ -63,15 +64,7 @@ export default function ProfilPage() {
           </div>
         </Card>
 
-        <Card className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Moon className="w-5 h-5 text-muted" />
-              <span className="text-sm">Mode sombre</span>
-            </div>
-            <span className="text-xs text-muted">Automatique</span>
-          </div>
-        </Card>
+        <ThemeSelector />
 
         <InstallAppCard />
 
