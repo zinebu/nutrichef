@@ -2,6 +2,8 @@ import type { CookingType, RecipeCategory, RecipeTag } from "@/types";
 
 export const APP_NAME = "Cherry";
 
+export const DEMO_COOKIE = "cherry_demo";
+
 export const RECIPE_CATEGORIES: { value: RecipeCategory; label: string }[] = [
   { value: "petit_dejeuner", label: "Petit déjeuner" },
   { value: "dejeuner", label: "Déjeuner" },

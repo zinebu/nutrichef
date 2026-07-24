@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { DEMO_COOKIE } from "@/lib/constants";
 
 function isValidSupabaseUrl(url: string | undefined): boolean {
   return !!url && url.startsWith("https://") && url.includes(".supabase.co");
@@ -10,8 +11,14 @@ export async function updateSession(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isDemoMode = request.cookies.get(DEMO_COOKIE)?.value === "1";
 
   if (!isValidSupabaseUrl(supabaseUrl) || !supabaseKey) {
+    return supabaseResponse;
+  }
+
+  // Mode démo : accès sans compte, données en local
+  if (isDemoMode) {
     return supabaseResponse;
   }
 

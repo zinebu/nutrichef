@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { CherryLogo } from "@/components/layout/CherryLogo";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { enableDemoMode, disableDemoMode } from "@/lib/demo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,9 @@ export default function LoginPage() {
     setError("");
 
     if (!isSupabaseConfigured()) {
+      enableDemoMode();
       router.push("/");
+      router.refresh();
       return;
     }
 
@@ -37,6 +40,13 @@ export default function LoginPage() {
       return;
     }
 
+    disableDemoMode();
+    router.push("/");
+    router.refresh();
+  };
+
+  const handleDemo = () => {
+    enableDemoMode();
     router.push("/");
     router.refresh();
   };
@@ -72,7 +82,7 @@ export default function LoginPage() {
         </form>
 
         <div className="space-y-3 animate-fade-up stagger-3">
-          <Button variant="ghost" className="w-full" onClick={() => router.push("/")}>
+          <Button variant="ghost" className="w-full" onClick={handleDemo}>
             Continuer sans compte
           </Button>
           <p className="text-center text-sm text-muted">
