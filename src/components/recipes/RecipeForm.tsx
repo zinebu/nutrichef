@@ -15,7 +15,15 @@ import {
 } from "@/lib/constants";
 import { Badge } from "@/components/ui/Badge";
 import { toGrams } from "@/lib/utils/unit-convert";
-import type { CreateRecipeInput, Ingredient, NutritionData, RecipeCategory, RecipeTag, CookingType } from "@/types";
+import type {
+  CreateRecipeInput,
+  Ingredient,
+  NutritionData,
+  Recipe,
+  RecipeCategory,
+  RecipeTag,
+  CookingType,
+} from "@/types";
 
 const FAT_TYPES = [
   "Aucune",
@@ -28,28 +36,68 @@ const FAT_TYPES = [
 
 const FAT_UNITS = ["g", "ml", "c. à soupe", "c. à café"];
 
-interface RecipeFormProps {
-  onSubmit: (data: CreateRecipeInput) => Promise<void>;
+/** Reconstitue l'analyse affichée dans le formulaire depuis une recette enregistrée */
+function nutritionFromRecipe(recipe?: Recipe | null): NutritionData | null {
+  if (!recipe || recipe.calories_total == null) return null;
+  return {
+    detectedFoods: recipe.ai_detected_foods ?? [],
+    caloriesTotal: recipe.calories_total,
+    caloriesPerServing: recipe.calories_per_serving ?? 0,
+    proteinsG: recipe.proteins_g ?? 0,
+    carbsG: recipe.carbs_g ?? 0,
+    fatsG: recipe.fats_g ?? 0,
+    sugarG: recipe.sugar_g ?? 0,
+    fiberG: recipe.fiber_g ?? 0,
+    tips: recipe.nutrition_tips ?? "",
+  };
 }
 
-export function RecipeForm({ onSubmit }: RecipeFormProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<RecipeCategory>("dejeuner");
-  const [tags, setTags] = useState<RecipeTag[]>([]);
-  const [cookingType, setCookingType] = useState<CookingType>("four");
-  const [prepTime, setPrepTime] = useState<number>(30);
-  const [servings, setServings] = useState(2);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [nutrition, setNutrition] = useState<NutritionData | null>(null);
+interface RecipeFormProps {
+  onSubmit: (data: CreateRecipeInput) => Promise<void>;
+  /** Recette à modifier : le formulaire repart de ses valeurs */
+  initialRecipe?: Recipe | null;
+  submitLabel?: string;
+}
+
+export function RecipeForm({ onSubmit, initialRecipe, submitLabel }: RecipeFormProps) {
+  const [name, setName] = useState(initialRecipe?.name ?? "");
+  const [description, setDescription] = useState(initialRecipe?.description ?? "");
+  const [category, setCategory] = useState<RecipeCategory>(
+    initialRecipe?.category ?? "dejeuner"
+  );
+  const [tags, setTags] = useState<RecipeTag[]>(initialRecipe?.tags ?? []);
+  const [cookingType, setCookingType] = useState<CookingType>(
+    initialRecipe?.cooking_type ?? "four"
+  );
+  const [prepTime, setPrepTime] = useState<number>(
+    initialRecipe?.prep_time_minutes ?? 30
+  );
+  const [servings, setServings] = useState(initialRecipe?.servings ?? 2);
+  const [ingredients, setIngredients] = useState<Ingredient[]>(
+    initialRecipe?.ingredients ?? []
+  );
+  const [photoPreview, setPhotoPreview] = useState<string | null>(
+    initialRecipe?.photo_url ?? null
+  );
+  const [nutrition, setNutrition] = useState<NutritionData | null>(
+    nutritionFromRecipe(initialRecipe)
+  );
   const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [fatType, setFatType] = useState(FAT_TYPES[0]);
-  const [fatQuantity, setFatQuantity] = useState(0);
-  const [fatUnit, setFatUnit] = useState(FAT_UNITS[0]);
-  const [cookedWeight, setCookedWeight] = useState(0);
-  const [extras, setExtras] = useState("");
+  // Seul le poids en grammes est enregistré, l'unité repart donc de « g »
+  const [fatType, setFatType] = useState(
+    initialRecipe?.cooking_fat_type ?? FAT_TYPES[0]
+  );
+  const [fatQuantity, setFatQuantity] = useState(
+    initialRecipe?.cooking_fat_grams ?? 0
+  );
+  const [fatUnit, setFatUnit] = useState(
+    initialRecipe?.cooking_fat_grams ? "g" : FAT_UNITS[0]
+  );
+  const [cookedWeight, setCookedWeight] = useState(
+    initialRecipe?.total_cooked_weight_g ?? 0
+  );
+  const [extras, setExtras] = useState(initialRecipe?.extras ?? "");
 
   const cookingFat =
     fatType !== "Aucune" && fatQuantity > 0
@@ -305,14 +353,20 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
           </Button>
         </div>
         <p className="text-xs text-muted">
-          Ajoutez une photo et/ou des ingrédients, puis lancez l&apos;analyse nutritionnelle OpenAI.
+          {initialRecipe
+            ? "Relance l'analyse si tu as changé les ingrédients, les quantités ou le nombre de portions."
+            : "Ajoutez une photo et/ou des ingrédients, puis lancez l'analyse nutritionnelle OpenAI."}
         </p>
       </Card>
 
       {nutrition && <NutritionPanel nutrition={nutrition} />}
 
       <Button type="submit" className="w-full" size="lg" disabled={submitting}>
-        {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enregistrer la recette"}
+        {submitting ? (
+          <Loader2 className="w-5 h-5 animate-spin" />
+        ) : (
+          (submitLabel ?? "Enregistrer la recette")
+        )}
       </Button>
     </form>
   );

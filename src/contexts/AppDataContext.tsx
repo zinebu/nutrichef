@@ -146,10 +146,31 @@ async function shrinkRecipePhotos(recipes: Recipe[]): Promise<Recipe[]> {
   return result;
 }
 
+async function normalizeRecipeInput(input: CreateRecipeInput) {
+  let photo_url = input.photo_url;
+  if (photo_url?.startsWith("data:")) {
+    photo_url = await compressImage(photo_url, 800, 0.75);
+  }
+
+  return {
+    ...input,
+    photo_url,
+    ingredients: input.ingredients.map((ing) => {
+      const name = normalizeIngredientName(ing.name);
+      return {
+        ...ing,
+        name,
+        grams: ing.grams ?? toGrams(name, ing.quantity, ing.unit) ?? undefined,
+      };
+    }),
+  };
+}
+
 interface AppDataContextValue {
   recipes: Recipe[];
   recipesLoading: boolean;
   createRecipe: (input: CreateRecipeInput) => Promise<Recipe>;
+  updateRecipe: (id: string, input: CreateRecipeInput) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
   deleteRecipe: (id: string) => Promise<void>;
   filterRecipes: (filters: RecipeFilters) => Recipe[];
@@ -226,23 +247,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [weekStart]);
 
   const createRecipe = useCallback(async (input: CreateRecipeInput) => {
-    let photo_url = input.photo_url;
-    if (photo_url?.startsWith("data:")) {
-      photo_url = await compressImage(photo_url, 800, 0.75);
-    }
-
-    const normalizedInput = {
-      ...input,
-      photo_url,
-      ingredients: input.ingredients.map((ing) => {
-        const name = normalizeIngredientName(ing.name);
-        return {
-          ...ing,
-          name,
-          grams: ing.grams ?? toGrams(name, ing.quantity, ing.unit) ?? undefined,
-        };
-      }),
-    };
+    const normalizedInput = await normalizeRecipeInput(input);
+    const photo_url = normalizedInput.photo_url;
 
     if (!useLocalOnly()) {
       const res = await fetch("/api/recipes", {
@@ -292,6 +298,58 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       return updated;
     });
     return newRecipe;
+  }, []);
+
+  const updateRecipe = useCallback(async (id: string, input: CreateRecipeInput) => {
+    const normalizedInput = await normalizeRecipeInput(input);
+
+    if (!useLocalOnly()) {
+      const res = await fetch(`/api/recipes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(normalizedInput),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setRecipes((prev) => prev.map((r) => (r.id === id ? updated : r)));
+        return;
+      }
+    }
+
+    setRecipes((prev) => {
+      const updated = prev.map((recipe) =>
+        recipe.id === id
+          ? {
+              ...recipe,
+              name: normalizedInput.name,
+              description: normalizedInput.description ?? null,
+              photo_url: normalizedInput.photo_url ?? null,
+              category: normalizedInput.category,
+              tags: normalizedInput.tags,
+              cooking_type: normalizedInput.cooking_type ?? null,
+              prep_time_minutes: normalizedInput.prep_time_minutes ?? null,
+              servings: normalizedInput.servings ?? 1,
+              calories_total: normalizedInput.nutrition?.caloriesTotal ?? null,
+              calories_per_serving: normalizedInput.nutrition?.caloriesPerServing ?? null,
+              proteins_g: normalizedInput.nutrition?.proteinsG ?? null,
+              carbs_g: normalizedInput.nutrition?.carbsG ?? null,
+              fats_g: normalizedInput.nutrition?.fatsG ?? null,
+              sugar_g: normalizedInput.nutrition?.sugarG ?? null,
+              fiber_g: normalizedInput.nutrition?.fiberG ?? null,
+              nutrition_tips: normalizedInput.nutrition?.tips ?? null,
+              ai_detected_foods: normalizedInput.nutrition?.detectedFoods ?? [],
+              ingredients: normalizedInput.ingredients,
+              cooking_fat_type: normalizedInput.cooking_fat_type ?? null,
+              cooking_fat_grams: normalizedInput.cooking_fat_grams ?? null,
+              total_cooked_weight_g: normalizedInput.total_cooked_weight_g ?? null,
+              extras: normalizedInput.extras ?? null,
+              updated_at: new Date().toISOString(),
+            }
+          : recipe
+      );
+      saveToStorageDebounced(STORAGE_KEYS.recipes, updated);
+      return updated;
+    });
   }, []);
 
   const toggleFavorite = useCallback(async (id: string) => {
@@ -674,6 +732,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       recipes,
       recipesLoading,
       createRecipe,
+      updateRecipe,
       toggleFavorite,
       deleteRecipe,
       filterRecipes,
@@ -699,6 +758,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       recipes,
       recipesLoading,
       createRecipe,
+      updateRecipe,
       toggleFavorite,
       deleteRecipe,
       filterRecipes,
@@ -738,6 +798,7 @@ export function useRecipes() {
     loading: ctx.recipesLoading,
     fetchRecipes: () => {},
     createRecipe: ctx.createRecipe,
+    updateRecipe: ctx.updateRecipe,
     toggleFavorite: ctx.toggleFavorite,
     deleteRecipe: ctx.deleteRecipe,
     filterRecipes: ctx.filterRecipes,

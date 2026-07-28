@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Heart, Trash2, Flame, Clock, UtensilsCrossed } from "lucide-react";
+import Link from "next/link";
+import { Heart, Pencil, Trash2, Flame, Clock, UtensilsCrossed } from "lucide-react";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -72,14 +73,24 @@ export default function RecipeDetailPage() {
         title={recipe.name}
         showBack
         action={
-          <button
-            onClick={() => toggleFavorite(recipe.id)}
-            className="p-2 rounded-xl hover:bg-surface-elevated"
-          >
-            <Heart
-              className={`w-6 h-6 ${recipe.is_favorite ? "fill-red-500 text-red-500" : ""}`}
-            />
-          </button>
+          <div className="flex items-center">
+            <Link
+              href={`/recettes/${recipe.id}/modifier`}
+              className="p-2 rounded-xl hover:bg-surface-elevated"
+              aria-label="Modifier la recette"
+            >
+              <Pencil className="w-5 h-5" />
+            </Link>
+            <button
+              onClick={() => toggleFavorite(recipe.id)}
+              className="p-2 rounded-xl hover:bg-surface-elevated"
+              aria-label="Favori"
+            >
+              <Heart
+                className={`w-6 h-6 ${recipe.is_favorite ? "fill-red-500 text-red-500" : ""}`}
+              />
+            </button>
+          </div>
         }
       />
 
@@ -150,6 +161,14 @@ export default function RecipeDetailPage() {
         )}
 
         {nutrition && <NutritionPanel nutrition={nutrition} />}
+
+        <Button
+          className="w-full"
+          onClick={() => router.push(`/recettes/${recipe.id}/modifier`)}
+        >
+          <Pencil className="w-4 h-4" />
+          Modifier la recette
+        </Button>
 
         <Button variant="danger" className="w-full" onClick={handleDelete}>
           <Trash2 className="w-4 h-4" />
