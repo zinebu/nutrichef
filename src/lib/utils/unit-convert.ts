@@ -274,8 +274,10 @@ function lookup(table: Record<string, number>, key: string): number | null {
     if (word.length > 2 && table[word] != null) return table[word];
   }
 
+  // Seuil de 4 caractères pour éviter qu'un mot court comme « ail »
+  // ne matche à l'intérieur d'un autre ingrédient.
   const candidates = Object.keys(table)
-    .filter((entry) => key.includes(entry))
+    .filter((entry) => entry.length >= 4 && key.includes(entry))
     .sort((a, b) => b.length - a.length);
 
   return candidates.length > 0 ? table[candidates[0]] : null;
@@ -372,6 +374,38 @@ export function missingConversions(
   }
 
   return [...missing.values()];
+}
+
+/** Ingrédients dont la « pièce » porte un nom précis */
+const PIECE_DISPLAY_UNITS: Record<string, [string, string]> = {
+  ail: ["gousse", "gousses"],
+  "gousse d'ail": ["gousse", "gousses"],
+};
+
+/** Poids moyen d'une pièce, ou null si inconnu */
+export function pieceWeight(ingredientKey: string): number | null {
+  return lookup(PIECE_WEIGHTS, ingredientKey);
+}
+
+/**
+ * Reconvertit une masse en nombre de pièces à acheter.
+ * Renvoie null si l'équivalence est inconnue ou si le poids représente
+ * moins d'une demi-pièce (le gramme reste alors plus parlant).
+ */
+export function piecesFromGrams(
+  ingredientKey: string,
+  grams: number
+): { quantity: number; unit: string } | null {
+  const weight = pieceWeight(ingredientKey);
+  if (weight == null || weight <= 0) return null;
+
+  const rawCount = grams / weight;
+  if (rawCount < 0.5) return null;
+
+  const quantity = Math.max(1, Math.round(rawCount));
+  const [singular, plural] = PIECE_DISPLAY_UNITS[ingredientKey] ?? ["pièce", "pièces"];
+
+  return { quantity, unit: quantity > 1 ? plural : singular };
 }
 
 /** Choisit g ou kg selon la masse totale */

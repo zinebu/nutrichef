@@ -3,10 +3,28 @@ import {
   getIngredientKey,
 } from "@/lib/utils/ingredient-normalize";
 import { categorizeByKey } from "@/lib/utils/ingredient-categories";
-import { formatGrams, toGrams } from "@/lib/utils/unit-convert";
+import { formatGrams, piecesFromGrams, toGrams } from "@/lib/utils/unit-convert";
 import type { Ingredient, ShoppingListItem } from "@/types";
 
 type ShoppingDraft = Omit<ShoppingListItem, "id" | "shopping_list_id">;
+
+/** Catégories qu'on achète à la pièce plutôt qu'au poids */
+const PIECE_CATEGORIES = new Set(["legumes", "fruits"]);
+
+/** Ingrédients toujours comptés à la pièce, quelle que soit leur catégorie */
+const PIECE_PREFERRED = new Set(["oeuf"]);
+
+function formatBucketQuantity(
+  ingredientKey: string,
+  category: string,
+  grams: number
+): { quantity: number; unit: string } {
+  if (PIECE_CATEGORIES.has(category) || PIECE_PREFERRED.has(ingredientKey)) {
+    const pieces = piecesFromGrams(ingredientKey, grams);
+    if (pieces) return pieces;
+  }
+  return formatGrams(grams);
+}
 
 export function categorizeIngredient(name: string): string {
   return categorizeByKey(getIngredientKey(name)) ?? "autres";
@@ -56,9 +74,9 @@ export function mergeIngredients(
 
   const items: ShoppingDraft[] = [];
 
-  for (const bucket of buckets.values()) {
+  for (const [key, bucket] of buckets) {
     if (bucket.grams > 0) {
-      const { quantity, unit } = formatGrams(bucket.grams);
+      const { quantity, unit } = formatBucketQuantity(key, bucket.category, bucket.grams);
       items.push({
         name: bucket.name,
         quantity,
