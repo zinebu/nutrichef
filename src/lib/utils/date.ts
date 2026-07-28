@@ -24,3 +24,13 @@ export function formatTodayDate(date = new Date()): string {
 export function getTodayLabel(date = new Date()): string {
   return DAYS_OF_WEEK[getTodayDayIndex(date)];
 }
+
+/** Créneau le plus pertinent selon l'heure, pour mettre le bon repas en avant */
+export function getCurrentMealSlot(
+  date = new Date()
+): "petit_dejeuner" | "dejeuner" | "diner" {
+  const hour = date.getHours();
+  if (hour < 10) return "petit_dejeuner";
+  if (hour < 15) return "dejeuner";
+  return "diner";
+}

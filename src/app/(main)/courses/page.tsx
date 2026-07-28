@@ -2,11 +2,10 @@
 
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { WeeklyPlanner, ShoppingListView } from "@/components/courses/WeeklyPlanner";
-import { useRecipes, useMealPlan, useShoppingList } from "@/hooks/useAppData";
+import { useMealPlan, useShoppingList } from "@/hooks/useAppData";
 
 export default function CoursesPage() {
-  const { recipes } = useRecipes();
-  const { mealPlan, setDayRecipe } = useMealPlan();
+  const { mealPlan } = useMealPlan();
   const { list, generateFromMealPlan, toggleItem, removeItem, addItem } = useShoppingList();
 
   return (
@@ -16,9 +15,6 @@ export default function CoursesPage() {
       <main className="px-4 py-4 space-y-8 max-w-lg mx-auto">
         <section className="animate-fade-up">
           <WeeklyPlanner
-            mealPlan={mealPlan}
-            recipes={recipes}
-            onSelectRecipe={setDayRecipe}
             onGenerateList={() => mealPlan && generateFromMealPlan(mealPlan)}
           />
         </section>

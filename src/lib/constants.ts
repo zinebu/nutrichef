@@ -1,4 +1,4 @@
-import type { CookingType, RecipeCategory, RecipeTag } from "@/types";
+import type { CookingType, MealSlot, RecipeCategory, RecipeTag } from "@/types";
 
 export const APP_NAME = "Cherry";
 
@@ -31,6 +31,20 @@ export const RECIPE_TAGS: { value: RecipeTag; label: string; color: string }[] =
   { value: "sans_gluten", label: "Sans gluten", color: "bg-neutral-500/10 text-neutral-500" },
   { value: "leger", label: "Léger", color: "bg-red-500/10 text-red-400" },
   { value: "gourmand", label: "Gourmand", color: "bg-red-600/15 text-red-700" },
+];
+
+/** Repère calorique quotidien utilisé pour équilibrer les suggestions */
+export const DAILY_CALORIE_TARGET = 2000;
+
+/** Créneaux fixes affichés pour chaque journée du planning */
+export const MEAL_SLOTS: {
+  value: Exclude<MealSlot, "snack">;
+  label: string;
+  short: string;
+}[] = [
+  { value: "petit_dejeuner", label: "Petit déjeuner", short: "Matin" },
+  { value: "dejeuner", label: "Repas principal", short: "Midi" },
+  { value: "diner", label: "Dîner", short: "Soir" },
 ];
 
 export const DAYS_OF_WEEK = [

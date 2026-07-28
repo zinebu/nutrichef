@@ -7,7 +7,9 @@ import { WeekStrip } from "@/components/home/WeekStrip";
 import { RecipeCarousel } from "@/components/home/RecipeCarousel";
 import { HomeQuickActions } from "@/components/home/HomeQuickActions";
 import { useRecipes, useMealPlan, useShoppingList } from "@/hooks/useAppData";
-import { getTodayDayIndex } from "@/lib/utils/date";
+import { getCurrentMealSlot, getTodayDayIndex } from "@/lib/utils/date";
+import { MEAL_SLOTS } from "@/lib/constants";
+import { dayCalories, mainRecipeForDay, recipeForSlot } from "@/lib/utils/meal-plan";
 
 export default function DashboardPage() {
   const { recipes, loading } = useRecipes();
@@ -15,12 +17,22 @@ export default function DashboardPage() {
   const { list } = useShoppingList();
 
   const todayIndex = getTodayDayIndex();
+  const currentSlot = getCurrentMealSlot();
 
-  const todayRecipe = useMemo(() => {
-    const item = mealPlan?.items?.find((i) => i.day_of_week === todayIndex);
-    if (!item?.recipe_id) return null;
-    return recipes.find((r) => r.id === item.recipe_id) ?? null;
-  }, [mealPlan, recipes, todayIndex]);
+  const todayRecipe = useMemo(
+    () =>
+      recipeForSlot(mealPlan, recipes, todayIndex, currentSlot) ??
+      mainRecipeForDay(mealPlan, recipes, todayIndex),
+    [mealPlan, recipes, todayIndex, currentSlot]
+  );
+
+  const todayCalories = useMemo(
+    () => dayCalories(mealPlan, recipes, todayIndex),
+    [mealPlan, recipes, todayIndex]
+  );
+
+  const currentSlotLabel =
+    MEAL_SLOTS.find((slot) => slot.value === currentSlot)?.label ?? "Au menu";
 
   const favorites = useMemo(
     () => recipes.filter((r) => r.is_favorite).slice(0, 8),
@@ -56,7 +68,11 @@ export default function DashboardPage() {
       />
 
       <div className="px-4 space-y-7 -mt-1">
-        <TodaySpotlight recipe={todayRecipe} />
+        <TodaySpotlight
+          recipe={todayRecipe}
+          slotLabel={currentSlotLabel}
+          dayCalories={todayCalories}
+        />
         <WeekStrip mealPlan={mealPlan} recipes={recipes} />
         <RecipeCarousel
           recipes={carouselRecipes}

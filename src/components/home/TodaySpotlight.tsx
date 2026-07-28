@@ -9,9 +9,11 @@ import type { Recipe } from "@/types";
 
 interface TodaySpotlightProps {
   recipe: Recipe | null;
+  slotLabel?: string;
+  dayCalories?: number;
 }
 
-export function TodaySpotlight({ recipe }: TodaySpotlightProps) {
+export function TodaySpotlight({ recipe, slotLabel, dayCalories }: TodaySpotlightProps) {
   if (!recipe) {
     return (
       <Link href="/courses" className="tap-scale block animate-fade-up stagger-2">
@@ -27,7 +29,11 @@ export function TodaySpotlight({ recipe }: TodaySpotlightProps) {
               <p className="font-handwritten text-2xl text-accent leading-tight mt-0.5">
                 Planifie ta semaine
               </p>
-              <p className="text-sm text-muted mt-1">Choisis un repas pour aujourd&apos;hui</p>
+              <p className="text-sm text-muted mt-1">
+                {slotLabel
+                  ? `Choisis ton ${slotLabel.toLowerCase()}`
+                  : "Choisis un repas pour aujourd'hui"}
+              </p>
             </div>
             <ChevronRight className="w-5 h-5 text-accent shrink-0" />
           </div>
@@ -42,7 +48,9 @@ export function TodaySpotlight({ recipe }: TodaySpotlightProps) {
         <RecipePhoto recipe={recipe} className="aspect-[16/10] w-full" sizes="400px" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-          <p className="text-xs uppercase tracking-widest opacity-80">{getTodayLabel()} — Au menu</p>
+          <p className="text-xs uppercase tracking-widest opacity-80">
+            {getTodayLabel()} — {slotLabel ?? "Au menu"}
+          </p>
           <h2 className="font-handwritten text-3xl leading-tight mt-1">{recipe.name}</h2>
           <div className="flex items-center gap-3 mt-2 text-sm opacity-90">
             {recipe.calories_per_serving && (
@@ -50,6 +58,9 @@ export function TodaySpotlight({ recipe }: TodaySpotlightProps) {
             )}
             {recipe.prep_time_minutes && (
               <span>{formatPrepTime(recipe.prep_time_minutes)}</span>
+            )}
+            {dayCalories != null && dayCalories > 0 && (
+              <span className="opacity-75">{Math.round(dayCalories)} kcal / jour</span>
             )}
           </div>
         </div>

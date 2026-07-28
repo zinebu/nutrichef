@@ -88,12 +88,38 @@ export interface Recipe {
   updated_at: string;
 }
 
+/** Créneaux fixes d'une journée, plus les snacks facultatifs */
+export type MealSlot = "petit_dejeuner" | "dejeuner" | "diner" | "snack";
+
 export interface MealPlanItem {
   id?: string;
   day_of_week: number;
   recipe_id: string | null;
-  meal_type: RecipeCategory;
+  meal_type: MealSlot;
   recipe?: Recipe;
+}
+
+export interface MealSuggestion {
+  mealType: MealSlot;
+  recipeId: string;
+  reason: string;
+}
+
+export interface DaySuggestions {
+  comment: string;
+  suggestions: MealSuggestion[];
+}
+
+export interface QuickNutrition {
+  name: string;
+  servingDescription: string;
+  caloriesPerServing: number;
+  proteinsG: number;
+  carbsG: number;
+  fatsG: number;
+  sugarG: number;
+  fiberG: number;
+  tips?: string;
 }
 
 export interface MealPlan {

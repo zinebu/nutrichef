@@ -5,6 +5,8 @@ import { DAYS_OF_WEEK } from "@/lib/constants";
 import { getTodayDayIndex } from "@/lib/utils/date";
 import { cn } from "@/lib/utils/cn";
 import { RecipePhoto } from "@/components/home/HomeHero";
+import { itemsForDay, mainRecipeForDay } from "@/lib/utils/meal-plan";
+import { MEAL_SLOTS } from "@/lib/constants";
 import type { MealPlan, Recipe } from "@/types";
 
 interface WeekStripProps {
@@ -14,12 +16,6 @@ interface WeekStripProps {
 
 export function WeekStrip({ mealPlan, recipes }: WeekStripProps) {
   const today = getTodayDayIndex();
-
-  const getRecipeForDay = (day: number) => {
-    const item = mealPlan?.items?.find((i) => i.day_of_week === day);
-    if (!item?.recipe_id) return null;
-    return recipes.find((r) => r.id === item.recipe_id) ?? null;
-  };
 
   const plannedCount = (mealPlan?.items ?? []).filter((i) => i.recipe_id).length;
 
@@ -39,7 +35,8 @@ export function WeekStrip({ mealPlan, recipes }: WeekStripProps) {
 
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 snap-x snap-mandatory">
         {DAYS_OF_WEEK.map((day, index) => {
-          const recipe = getRecipeForDay(index);
+          const recipe = mainRecipeForDay(mealPlan, recipes, index);
+          const dayItems = itemsForDay(mealPlan, index).filter((i) => i.recipe_id);
           const isToday = index === today;
 
           return (
@@ -76,6 +73,19 @@ export function WeekStrip({ mealPlan, recipes }: WeekStripProps) {
                 )}
               >
                 {day.slice(0, 3)}
+              </span>
+              <span className="flex gap-0.5 -mt-1">
+                {MEAL_SLOTS.map((slot) => (
+                  <span
+                    key={slot.value}
+                    className={cn(
+                      "w-1 h-1 rounded-full",
+                      dayItems.some((i) => i.meal_type === slot.value)
+                        ? "bg-accent"
+                        : "bg-border"
+                    )}
+                  />
+                ))}
               </span>
             </Link>
           );

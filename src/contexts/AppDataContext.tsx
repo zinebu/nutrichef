@@ -13,6 +13,9 @@ import {
 import type {
   CreateRecipeInput,
   MealPlan,
+  MealPlanItem,
+  MealSlot,
+  QuickNutrition,
   Recipe,
   RecipeFilters,
   ShoppingList,
@@ -24,6 +27,12 @@ import { normalizeIngredientName, getIngredientKey } from "@/lib/utils/ingredien
 import { compressImage } from "@/lib/utils/image-compress";
 import { resolveGramOverrides } from "@/lib/utils/weight-resolver";
 import { toGrams } from "@/lib/utils/unit-convert";
+import {
+  getBreakfastAppliedWeek,
+  getDefaultBreakfastId,
+  markBreakfastApplied,
+  setDefaultBreakfastId,
+} from "@/lib/preferences";
 
 const STORAGE_KEYS = {
   recipes: "cherry_recipes",
@@ -146,7 +155,13 @@ interface AppDataContextValue {
   filterRecipes: (filters: RecipeFilters) => Recipe[];
   mealPlan: MealPlan | null;
   mealPlanLoading: boolean;
-  setDayRecipe: (day: number, recipeId: string | null) => Promise<void>;
+  setDayRecipe: (day: number, slot: MealSlot, recipeId: string | null) => Promise<void>;
+  addSnack: (day: number, recipeId: string) => Promise<void>;
+  addQuickSnack: (day: number, name: string, quantity?: string) => Promise<QuickNutrition>;
+  removeMealItem: (item: MealPlanItem) => Promise<void>;
+  defaultBreakfastId: string | null;
+  setDefaultBreakfast: (recipeId: string | null) => void;
+  applyDefaultBreakfast: (recipeId: string) => Promise<void>;
   weekStart: string;
   list: ShoppingList | null;
   listLoading: boolean;
@@ -165,6 +180,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [mealPlanLoading, setMealPlanLoading] = useState(true);
   const [list, setList] = useState<ShoppingList | null>(null);
   const [listLoading, setListLoading] = useState(true);
+  const [defaultBreakfastId, setDefaultBreakfastState] = useState<string | null>(null);
   const initialized = useRef(false);
 
   const weekStart = getWeekStart();
@@ -180,6 +196,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setMealPlanLoading(false);
     setList(loadFromStorage(STORAGE_KEYS.shoppingList, null));
     setListLoading(false);
+    setDefaultBreakfastState(getDefaultBreakfastId());
 
     shrinkRecipePhotos(localRecipes.length ? localRecipes : DEMO_RECIPES).then(setRecipes);
 
@@ -328,8 +345,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [recipes]
   );
 
+  const updateLocalPlan = useCallback(
+    (mutate: (items: MealPlanItem[]) => MealPlanItem[]) => {
+      setMealPlan((prev) => {
+        const plan: MealPlan = prev ?? {
+          id: "local",
+          user_id: "local",
+          week_start: weekStart,
+          items: [],
+        };
+        const updated = { ...plan, items: mutate([...(plan.items ?? [])]) };
+        saveToStorageDebounced(STORAGE_KEYS.mealPlan, updated);
+        return updated;
+      });
+    },
+    [weekStart]
+  );
+
   const setDayRecipe = useCallback(
-    async (dayOfWeek: number, recipeId: string | null) => {
+    async (dayOfWeek: number, slot: MealSlot, recipeId: string | null) => {
       if (!useLocalOnly()) {
         const res = await fetch("/api/meal-plans", {
           method: "POST",
@@ -337,7 +371,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({
             week_start: weekStart,
             day_of_week: dayOfWeek,
+            meal_type: slot,
             recipe_id: recipeId,
+            mode: "set",
           }),
         });
         if (res.ok) {
@@ -346,33 +382,186 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      setMealPlan((prev) => {
-        const plan: MealPlan = prev ?? {
-          id: "local",
-          user_id: "local",
-          week_start: weekStart,
-          items: [],
-        };
-        const items = [...(plan.items ?? [])];
-        const idx = items.findIndex((i) => i.day_of_week === dayOfWeek);
-        if (recipeId) {
-          const item = {
+      updateLocalPlan((items) => {
+        const kept = items.filter(
+          (i) => !(i.day_of_week === dayOfWeek && i.meal_type === slot)
+        );
+        if (!recipeId) return kept;
+        return [
+          ...kept,
+          {
+            id: crypto.randomUUID(),
             day_of_week: dayOfWeek,
             recipe_id: recipeId,
-            meal_type: "dejeuner" as const,
-          };
-          if (idx >= 0) items[idx] = { ...items[idx], ...item };
-          else items.push(item);
-        } else if (idx >= 0) {
-          items.splice(idx, 1);
-        }
-        const updated = { ...plan, items };
-        saveToStorageDebounced(STORAGE_KEYS.mealPlan, updated);
-        return updated;
+            meal_type: slot,
+          },
+        ];
       });
     },
-    [weekStart]
+    [weekStart, updateLocalPlan]
   );
+
+  const addSnack = useCallback(
+    async (dayOfWeek: number, recipeId: string) => {
+      if (!useLocalOnly()) {
+        const res = await fetch("/api/meal-plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            week_start: weekStart,
+            day_of_week: dayOfWeek,
+            meal_type: "snack",
+            recipe_id: recipeId,
+            mode: "add",
+          }),
+        });
+        if (res.ok) {
+          setMealPlan(await res.json());
+          return;
+        }
+      }
+
+      updateLocalPlan((items) => [
+        ...items,
+        {
+          id: crypto.randomUUID(),
+          day_of_week: dayOfWeek,
+          recipe_id: recipeId,
+          meal_type: "snack",
+        },
+      ]);
+    },
+    [weekStart, updateLocalPlan]
+  );
+
+  const removeMealItem = useCallback(
+    async (item: MealPlanItem) => {
+      if (!useLocalOnly() && item.id) {
+        const res = await fetch("/api/meal-plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ week_start: weekStart, remove_item_id: item.id }),
+        });
+        if (res.ok) {
+          setMealPlan(await res.json());
+          return;
+        }
+      }
+
+      updateLocalPlan((items) => {
+        if (item.id) return items.filter((i) => i.id !== item.id);
+        const idx = items.findIndex(
+          (i) =>
+            i.day_of_week === item.day_of_week &&
+            i.meal_type === item.meal_type &&
+            i.recipe_id === item.recipe_id
+        );
+        if (idx >= 0) items.splice(idx, 1);
+        return items;
+      });
+    },
+    [weekStart, updateLocalPlan]
+  );
+
+  /** Snack acheté saisi au clavier : l'IA estime l'apport, puis on l'enregistre */
+  const addQuickSnack = useCallback(
+    async (dayOfWeek: number, name: string, quantity?: string) => {
+      const res = await fetch("/api/nutrition/quick", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, quantity }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Analyse impossible");
+      }
+      const nutrition: QuickNutrition = await res.json();
+
+      const recipe = await createRecipe({
+        name: nutrition.name,
+        description: nutrition.servingDescription,
+        category: "snack",
+        tags: [],
+        servings: 1,
+        ingredients: [{ name: nutrition.name, quantity: 1, unit: "pièce" }],
+        nutrition: {
+          detectedFoods: [],
+          caloriesTotal: nutrition.caloriesPerServing,
+          caloriesPerServing: nutrition.caloriesPerServing,
+          proteinsG: nutrition.proteinsG,
+          carbsG: nutrition.carbsG,
+          fatsG: nutrition.fatsG,
+          sugarG: nutrition.sugarG,
+          fiberG: nutrition.fiberG,
+          tips: nutrition.tips ?? "",
+        },
+      });
+
+      await addSnack(dayOfWeek, recipe.id);
+      return nutrition;
+    },
+    [createRecipe, addSnack]
+  );
+
+  const setDefaultBreakfast = useCallback((recipeId: string | null) => {
+    setDefaultBreakfastId(recipeId);
+    setDefaultBreakfastState(recipeId);
+  }, []);
+
+  /** Remplit d'un coup les créneaux petit déjeuner encore vides de la semaine */
+  const applyDefaultBreakfast = useCallback(
+    async (recipeId: string) => {
+      const planned = new Set(
+        (mealPlan?.items ?? [])
+          .filter((i) => i.meal_type === "petit_dejeuner" && i.recipe_id)
+          .map((i) => i.day_of_week)
+      );
+      const days = [0, 1, 2, 3, 4, 5, 6].filter((day) => !planned.has(day));
+      if (days.length === 0) return;
+
+      if (!useLocalOnly()) {
+        const res = await fetch("/api/meal-plans", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            week_start: weekStart,
+            bulk: days.map((day) => ({
+              day_of_week: day,
+              meal_type: "petit_dejeuner",
+              recipe_id: recipeId,
+            })),
+          }),
+        });
+        if (res.ok) {
+          setMealPlan(await res.json());
+          return;
+        }
+      }
+
+      updateLocalPlan((items) => [
+        ...items,
+        ...days.map((day) => ({
+          id: crypto.randomUUID(),
+          day_of_week: day,
+          recipe_id: recipeId,
+          meal_type: "petit_dejeuner" as const,
+        })),
+      ]);
+    },
+    [mealPlan, weekStart, updateLocalPlan]
+  );
+
+  // Le petit déjeuner par défaut se pose tout seul une fois par semaine.
+  // Retirer un jour ensuite ne le fait pas revenir.
+  useEffect(() => {
+    if (mealPlanLoading || recipesLoading) return;
+    if (!defaultBreakfastId) return;
+    if (getBreakfastAppliedWeek() === weekStart) return;
+    if (!recipes.some((r) => r.id === defaultBreakfastId)) return;
+    markBreakfastApplied(weekStart);
+    applyDefaultBreakfast(defaultBreakfastId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mealPlanLoading, recipesLoading, defaultBreakfastId, weekStart, recipes.length]);
 
   const generateFromMealPlan = useCallback(
     async (plan: MealPlan) => {
@@ -474,6 +663,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       mealPlan,
       mealPlanLoading,
       setDayRecipe,
+      addSnack,
+      addQuickSnack,
+      removeMealItem,
+      defaultBreakfastId,
+      setDefaultBreakfast,
+      applyDefaultBreakfast,
       weekStart,
       list,
       listLoading,
@@ -492,6 +687,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       mealPlan,
       mealPlanLoading,
       setDayRecipe,
+      addSnack,
+      addQuickSnack,
+      removeMealItem,
+      defaultBreakfastId,
+      setDefaultBreakfast,
+      applyDefaultBreakfast,
       weekStart,
       list,
       listLoading,
@@ -530,6 +731,12 @@ export function useMealPlan() {
     mealPlan: ctx.mealPlan,
     loading: ctx.mealPlanLoading,
     setDayRecipe: ctx.setDayRecipe,
+    addSnack: ctx.addSnack,
+    addQuickSnack: ctx.addQuickSnack,
+    removeMealItem: ctx.removeMealItem,
+    defaultBreakfastId: ctx.defaultBreakfastId,
+    setDefaultBreakfast: ctx.setDefaultBreakfast,
+    applyDefaultBreakfast: ctx.applyDefaultBreakfast,
     weekStart: ctx.weekStart,
     fetchMealPlan: () => {},
   };
