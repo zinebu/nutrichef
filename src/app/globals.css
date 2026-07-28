@@ -134,3 +134,23 @@ body {
 .tap-scale:active {
   transform: scale(0.97);
 }
+
+.home-hero-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent),
+    radial-gradient(ellipse 60% 50% at 0% 100%, color-mix(in srgb, var(--accent) 8%, transparent), transparent),
+    var(--background);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.home-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.home-float-delayed {
+  animation: float 6s ease-in-out 1s infinite;
+}

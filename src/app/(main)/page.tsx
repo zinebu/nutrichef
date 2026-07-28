@@ -1,87 +1,71 @@
 "use client";
 
-import Link from "next/link";
-import { Plus, BookOpen, ShoppingCart, PenLine } from "lucide-react";
-import { MobileHeader } from "@/components/layout/MobileHeader";
-import { Button } from "@/components/ui/Button";
-import { RecipeCard } from "@/components/recipes/RecipeCard";
-import { useRecipes } from "@/hooks/useAppData";
-
-const quickLinks = [
-  { href: "/recettes", label: "Recettes", icon: BookOpen },
-  { href: "/recettes/nouvelle", label: "Nouvelle", icon: PenLine },
-  { href: "/courses", label: "Courses", icon: ShoppingCart },
-];
+import { useMemo } from "react";
+import { HomeHero } from "@/components/home/HomeHero";
+import { TodaySpotlight } from "@/components/home/TodaySpotlight";
+import { WeekStrip } from "@/components/home/WeekStrip";
+import { RecipeCarousel } from "@/components/home/RecipeCarousel";
+import { HomeQuickActions } from "@/components/home/HomeQuickActions";
+import { useRecipes, useMealPlan, useShoppingList } from "@/hooks/useAppData";
+import { getTodayDayIndex } from "@/lib/utils/date";
 
 export default function DashboardPage() {
-  const { recipes, loading, toggleFavorite } = useRecipes();
-  const recent = recipes.slice(0, 5);
+  const { recipes, loading } = useRecipes();
+  const { mealPlan } = useMealPlan();
+  const { list } = useShoppingList();
+
+  const todayIndex = getTodayDayIndex();
+
+  const todayRecipe = useMemo(() => {
+    const item = mealPlan?.items?.find((i) => i.day_of_week === todayIndex);
+    if (!item?.recipe_id) return null;
+    return recipes.find((r) => r.id === item.recipe_id) ?? null;
+  }, [mealPlan, recipes, todayIndex]);
+
+  const favorites = useMemo(
+    () => recipes.filter((r) => r.is_favorite).slice(0, 8),
+    [recipes]
+  );
+
+  const recent = useMemo(() => recipes.slice(0, 8), [recipes]);
+
+  const carouselRecipes = favorites.length > 0 ? favorites : recent;
+  const carouselTitle = favorites.length > 0 ? "Mes favoris" : "Récentes";
+
+  const favoriteCount = recipes.filter((r) => r.is_favorite).length;
+  const shoppingLeft = (list?.items ?? []).filter((i) => !i.is_checked).length;
+
+  if (loading) {
+    return (
+      <main className="max-w-lg mx-auto">
+        <div className="h-52 home-hero-bg animate-pulse" />
+        <div className="px-4 space-y-4 mt-4">
+          <div className="h-44 rounded-3xl bg-surface animate-pulse" />
+          <div className="h-24 rounded-2xl bg-surface animate-pulse" />
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <>
-      <MobileHeader
-        showLogo
-        action={
-          <Link href="/recettes/nouvelle">
-            <Button size="sm" className="rounded-full w-9 h-9 p-0">
-              <Plus className="w-5 h-5" />
-            </Button>
-          </Link>
-        }
+    <main className="max-w-lg mx-auto pb-6">
+      <HomeHero
+        recipeCount={recipes.length}
+        favoriteCount={favoriteCount}
+        shoppingLeft={shoppingLeft}
       />
 
-      <main className="px-4 py-5 space-y-6 max-w-lg mx-auto">
-        <div className="flex gap-2 animate-fade-up">
-          {quickLinks.map((link) => {
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="tap-scale flex-1 flex flex-col items-center gap-2 py-3 rounded-2xl bg-surface border border-border"
-              >
-                <Icon className="w-5 h-5 text-accent" strokeWidth={1.75} />
-                <span className="text-xs text-muted">{link.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        <section className="animate-fade-up stagger-2">
-          <h2 className="font-handwritten text-2xl text-accent mb-3">Récentes</h2>
-          {loading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 rounded-xl bg-surface animate-pulse"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                />
-              ))}
-            </div>
-          ) : recent.length > 0 ? (
-            <div className="space-y-2">
-              {recent.map((recipe, i) => (
-                <div
-                  key={recipe.id}
-                  className="animate-fade-up"
-                  style={{ animationDelay: `${i * 0.06}s`, opacity: 0 }}
-                >
-                  <RecipeCard recipe={recipe} onToggleFavorite={toggleFavorite} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Link
-              href="/recettes/nouvelle"
-              className="tap-scale flex flex-col items-center justify-center py-10 rounded-2xl border-2 border-dashed border-accent/30"
-            >
-              <PenLine className="w-8 h-8 text-accent mb-2" strokeWidth={1.5} />
-              <p className="font-handwritten text-2xl text-accent">Ta première recette</p>
-            </Link>
-          )}
-        </section>
-      </main>
-    </>
+      <div className="px-4 space-y-7 -mt-1">
+        <TodaySpotlight recipe={todayRecipe} />
+        <WeekStrip mealPlan={mealPlan} recipes={recipes} />
+        <RecipeCarousel
+          recipes={carouselRecipes}
+          title={carouselTitle}
+          emptyLabel="Créer ta première recette"
+          emptyHref="/recettes/nouvelle"
+        />
+        <HomeQuickActions />
+      </div>
+    </main>
   );
 }
