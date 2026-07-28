@@ -52,28 +52,3 @@ export const SHOPPING_CATEGORIES: Record<string, string> = {
   epices: "Épices & Condiments",
   autres: "Autres",
 };
-
-export const INGREDIENT_CATEGORY_MAP: Record<string, string> = {
-  tomate: "legumes",
-  oignon: "legumes",
-  avocat: "legumes",
-  carotte: "legumes",
-  salade: "legumes",
-  courgette: "legumes",
-  poivron: "legumes",
-  pomme: "fruits",
-  banane: "fruits",
-  citron: "fruits",
-  poulet: "proteines",
-  boeuf: "proteines",
-  saumon: "proteines",
-  oeuf: "proteines",
-  tofu: "proteines",
-  lait: "laitiers",
-  fromage: "laitiers",
-  yaourt: "laitiers",
-  riz: "feculents",
-  pates: "feculents",
-  pain: "feculents",
-  pomme_de_terre: "feculents",
-};

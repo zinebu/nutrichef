@@ -1,8 +1,8 @@
-import { INGREDIENT_CATEGORY_MAP } from "@/lib/constants";
 import {
   formatIngredientName,
   getIngredientKey,
 } from "@/lib/utils/ingredient-normalize";
+import { categorizeByKey } from "@/lib/utils/ingredient-categories";
 import type { Ingredient, ShoppingListItem } from "@/types";
 
 function normalizeName(name: string): string {
@@ -10,21 +10,8 @@ function normalizeName(name: string): string {
 }
 
 export function categorizeIngredient(name: string): string {
-  const normalized = getIngredientKey(name);
-  for (const [key, category] of Object.entries(INGREDIENT_CATEGORY_MAP)) {
-    if (normalized.includes(key.replace(/_/g, " ")) || normalized.includes(key)) {
-      return category;
-    }
-  }
-  if (/legume|herbe|ail|epinard|brocoli|oignon|tomate|carotte|courgette|poivron/.test(normalized))
-    return "legumes";
-  if (/fruit|baie|pomme|banane|citron/.test(normalized)) return "fruits";
-  if (/poulet|viande|poisson|oeuf|tofu|jambon|crevette|saumon|thon|boeuf/.test(normalized))
-    return "proteines";
-  if (/lait|fromage|creme|beurre|yaourt/.test(normalized)) return "laitiers";
-  if (/riz|pate|pain|farine|semoule|quinoa|pomme de terre/.test(normalized)) return "feculents";
-  if (/epice|sel|poivre|huile|vinaigre|sauce|moutarde/.test(normalized)) return "epices";
-  return "autres";
+  const key = getIngredientKey(name);
+  return categorizeByKey(key) ?? "autres";
 }
 
 export function mergeIngredients(
@@ -42,7 +29,6 @@ export function mergeIngredients(
     if (existing && existing.unit === ing.unit) {
       existing.quantity = (existing.quantity ?? 0) + ing.quantity;
     } else if (existing && existing.unit !== ing.unit) {
-      // Même ingrédient, unités différentes → entrées séparées avec suffixe
       const altKey = `${key}__${ing.unit}`;
       merged.set(altKey, {
         name: displayName,
