@@ -3,54 +3,85 @@ import {
   getIngredientKey,
 } from "@/lib/utils/ingredient-normalize";
 import { categorizeByKey } from "@/lib/utils/ingredient-categories";
+import { formatGrams, toGrams } from "@/lib/utils/unit-convert";
 import type { Ingredient, ShoppingListItem } from "@/types";
 
-function normalizeName(name: string): string {
-  return getIngredientKey(name);
-}
+type ShoppingDraft = Omit<ShoppingListItem, "id" | "shopping_list_id">;
 
 export function categorizeIngredient(name: string): string {
-  const key = getIngredientKey(name);
-  return categorizeByKey(key) ?? "autres";
+  return categorizeByKey(getIngredientKey(name)) ?? "autres";
 }
 
+interface Bucket {
+  name: string;
+  category: string;
+  grams: number;
+  /** Mesures impossibles à convertir, conservées dans leur unité d'origine */
+  leftovers: Map<string, number>;
+}
+
+/**
+ * Regroupe les ingrédients par produit en additionnant tout en grammes,
+ * pour que « 400 g de farine » et « 1 c. à soupe de farine » ne fassent
+ * qu'une seule ligne. `gramOverrides` vient de la table locale + IA.
+ */
 export function mergeIngredients(
-  ingredients: Ingredient[]
-): Omit<ShoppingListItem, "id" | "shopping_list_id">[] {
-  const merged = new Map<string, Omit<ShoppingListItem, "id" | "shopping_list_id">>();
+  ingredients: Ingredient[],
+  gramOverrides?: Map<string, number>
+): ShoppingDraft[] {
+  const buckets = new Map<string, Bucket>();
 
   for (const ing of ingredients) {
-    const key = normalizeName(ing.name);
+    const key = getIngredientKey(ing.name);
     if (!key) continue;
 
-    const displayName = formatIngredientName(ing.name);
-    const existing = merged.get(key);
+    const bucket = buckets.get(key) ?? {
+      name: formatIngredientName(ing.name),
+      category: categorizeIngredient(ing.name),
+      grams: 0,
+      leftovers: new Map<string, number>(),
+    };
 
-    if (existing && existing.unit === ing.unit) {
-      existing.quantity = (existing.quantity ?? 0) + ing.quantity;
-    } else if (existing && existing.unit !== ing.unit) {
-      const altKey = `${key}__${ing.unit}`;
-      merged.set(altKey, {
-        name: displayName,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        category: categorizeIngredient(ing.name),
+    const grams = ing.grams ?? toGrams(ing.name, ing.quantity, ing.unit, gramOverrides);
+
+    if (grams != null && grams > 0) {
+      bucket.grams += grams;
+    } else {
+      const unit = ing.unit?.trim() || "pièce";
+      bucket.leftovers.set(unit, (bucket.leftovers.get(unit) ?? 0) + ing.quantity);
+    }
+
+    buckets.set(key, bucket);
+  }
+
+  const items: ShoppingDraft[] = [];
+
+  for (const bucket of buckets.values()) {
+    if (bucket.grams > 0) {
+      const { quantity, unit } = formatGrams(bucket.grams);
+      items.push({
+        name: bucket.name,
+        quantity,
+        unit,
+        category: bucket.category,
         is_checked: false,
         is_manual: false,
       });
-    } else {
-      merged.set(key, {
-        name: displayName,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        category: categorizeIngredient(ing.name),
+    }
+
+    for (const [unit, quantity] of bucket.leftovers) {
+      items.push({
+        name: bucket.name,
+        quantity,
+        unit,
+        category: bucket.category,
         is_checked: false,
         is_manual: false,
       });
     }
   }
 
-  return Array.from(merged.values()).sort(
+  return items.sort(
     (a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)
   );
 }

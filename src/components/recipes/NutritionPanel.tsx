@@ -8,7 +8,14 @@ interface NutritionPanelProps {
   nutrition: NutritionData;
 }
 
+const CONFIDENCE_STYLES: Record<string, string> = {
+  bonne: "bg-green-500/15 text-green-600",
+  moyenne: "bg-amber-500/15 text-amber-600",
+  faible: "bg-red-500/15 text-red-500",
+};
+
 export function NutritionPanel({ nutrition }: NutritionPanelProps) {
+  const confidence = nutrition.confidence?.toLowerCase();
   const macros = [
     { label: "Calories", value: `${Math.round(nutrition.caloriesTotal)} kcal`, highlight: true },
     { label: "Par portion", value: `${Math.round(nutrition.caloriesPerServing)} kcal` },
@@ -21,7 +28,14 @@ export function NutritionPanel({ nutrition }: NutritionPanelProps) {
 
   return (
     <Card elevated className="space-y-4">
-      <h3 className="font-semibold text-lg">Analyse nutritionnelle</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-semibold text-lg">Analyse nutritionnelle</h3>
+        {confidence && (
+          <Badge className={CONFIDENCE_STYLES[confidence] ?? "bg-surface text-muted"}>
+            Fiabilité {confidence}
+          </Badge>
+        )}
+      </div>
 
       {nutrition.detectedFoods.length > 0 && (
         <div>
@@ -56,6 +70,19 @@ export function NutritionPanel({ nutrition }: NutritionPanelProps) {
         <div className="rounded-xl bg-accent/10 p-3 border border-accent/20">
           <p className="text-xs text-accent font-medium mb-1">Conseil</p>
           <p className="text-sm">{nutrition.tips}</p>
+        </div>
+      )}
+
+      {nutrition.missingInfo && nutrition.missingInfo.length > 0 && (
+        <div className="rounded-xl bg-surface p-3 border border-border">
+          <p className="text-xs font-medium mb-1.5">
+            Pour une estimation plus juste, précise :
+          </p>
+          <ul className="text-sm text-muted space-y-1 list-disc list-inside">
+            {nutrition.missingInfo.map((info) => (
+              <li key={info}>{info}</li>
+            ))}
+          </ul>
         </div>
       )}
     </Card>

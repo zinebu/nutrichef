@@ -14,7 +14,19 @@ import {
   RECIPE_TAGS,
 } from "@/lib/constants";
 import { Badge } from "@/components/ui/Badge";
+import { toGrams } from "@/lib/utils/unit-convert";
 import type { CreateRecipeInput, Ingredient, NutritionData, RecipeCategory, RecipeTag, CookingType } from "@/types";
+
+const FAT_TYPES = [
+  "Aucune",
+  "Huile d'olive",
+  "Huile de tournesol",
+  "Beurre",
+  "Margarine",
+  "Huile de coco",
+];
+
+const FAT_UNITS = ["g", "ml", "c. à soupe", "c. à café"];
 
 interface RecipeFormProps {
   onSubmit: (data: CreateRecipeInput) => Promise<void>;
@@ -33,6 +45,16 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
   const [nutrition, setNutrition] = useState<NutritionData | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [fatType, setFatType] = useState(FAT_TYPES[0]);
+  const [fatQuantity, setFatQuantity] = useState(0);
+  const [fatUnit, setFatUnit] = useState(FAT_UNITS[0]);
+  const [cookedWeight, setCookedWeight] = useState(0);
+  const [extras, setExtras] = useState("");
+
+  const cookingFat =
+    fatType !== "Aucune" && fatQuantity > 0
+      ? { type: fatType, quantity: fatQuantity, unit: fatUnit }
+      : null;
 
   const handlePhoto = (dataUrl: string) => setPhotoPreview(dataUrl);
 
@@ -50,10 +72,16 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageBase64: photoPreview,
-          ingredients,
+          ingredients: ingredients.map((ing) => ({
+            ...ing,
+            grams: ing.grams ?? toGrams(ing.name, ing.quantity, ing.unit) ?? undefined,
+          })),
           cookingType,
           servings,
           recipeName: name,
+          cookingFat,
+          totalCookedWeightG: cookedWeight > 0 ? cookedWeight : null,
+          extras,
         }),
       });
       if (res.ok) {
@@ -89,6 +117,12 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
         servings,
         ingredients,
         nutrition: nutrition ?? undefined,
+        cooking_fat_type: cookingFat?.type,
+        cooking_fat_grams: cookingFat
+          ? toGrams(cookingFat.type, cookingFat.quantity, cookingFat.unit) ?? undefined
+          : undefined,
+        total_cooked_weight_g: cookedWeight > 0 ? cookedWeight : undefined,
+        extras: extras.trim() || undefined,
       });
     } finally {
       setSubmitting(false);
@@ -176,6 +210,79 @@ export function RecipeForm({ onSubmit }: RecipeFormProps) {
       </div>
 
       <IngredientInput ingredients={ingredients} onChange={setIngredients} />
+
+      <Card className="space-y-4">
+        <div>
+          <h3 className="font-medium text-sm">Précision de l&apos;analyse</h3>
+          <p className="text-xs text-muted mt-1">
+            Ces détails changent beaucoup le résultat calorique.
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-muted mb-2">
+            Matière grasse de cuisson
+          </p>
+          <div className="flex gap-2">
+            <select
+              value={fatType}
+              onChange={(e) => setFatType(e.target.value)}
+              className="flex-1 h-12 px-3 rounded-2xl bg-surface-elevated border border-border/50 text-sm"
+            >
+              {FAT_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+            {fatType !== "Aucune" && (
+              <>
+                <Input
+                  type="number"
+                  placeholder="Qté"
+                  value={fatQuantity || ""}
+                  onChange={(e) => setFatQuantity(Number(e.target.value))}
+                  className="w-20"
+                />
+                <select
+                  value={fatUnit}
+                  onChange={(e) => setFatUnit(e.target.value)}
+                  className="h-12 px-2 rounded-2xl bg-surface-elevated border border-border/50 text-sm"
+                >
+                  {FAT_UNITS.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
+          <p className="text-xs text-muted mt-1.5">
+            Compte aussi l&apos;huile ou le beurre qui sert juste à graisser le plat.
+          </p>
+        </div>
+
+        <Input
+          label="Poids total après cuisson (g, optionnel)"
+          type="number"
+          value={cookedWeight || ""}
+          onChange={(e) => setCookedWeight(Number(e.target.value))}
+        />
+
+        <div>
+          <label className="text-sm font-medium text-muted">
+            Ajouts et garnitures
+          </label>
+          <textarea
+            value={extras}
+            onChange={(e) => setExtras(e.target.value)}
+            rows={2}
+            className="mt-1.5 w-full px-4 py-3 rounded-2xl bg-surface-elevated border border-border/50 focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none text-sm"
+            placeholder="Sauce, fromage sur le dessus, sucre, noix, chocolat..."
+          />
+        </div>
+      </Card>
 
       <Card className="space-y-3">
         <div className="flex items-center justify-between">

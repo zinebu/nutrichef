@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { analyzeNutrition } from "@/lib/openai/nutrition";
-import type { CookingType, Ingredient } from "@/types";
+import type { CookingFat, CookingType, Ingredient } from "@/types";
 
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
@@ -18,12 +18,18 @@ export async function POST(request: Request) {
       cookingType,
       servings = 1,
       recipeName,
+      cookingFat,
+      totalCookedWeightG,
+      extras,
     }: {
       imageBase64?: string;
       ingredients?: Ingredient[];
       cookingType?: CookingType;
       servings?: number;
       recipeName?: string;
+      cookingFat?: CookingFat | null;
+      totalCookedWeightG?: number | null;
+      extras?: string;
     } = body;
 
     if (!imageBase64 && ingredients.length === 0) {
@@ -39,6 +45,9 @@ export async function POST(request: Request) {
       cookingType,
       servings,
       recipeName,
+      cookingFat,
+      totalCookedWeightG,
+      extras,
     });
 
     return NextResponse.json(nutrition);

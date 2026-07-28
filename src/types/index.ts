@@ -29,7 +29,17 @@ export interface Ingredient {
   name: string;
   quantity: number;
   unit: string;
+  /** Type, variété ou marque, ex. « emmental 28% », « lait demi-écrémé » */
+  note?: string;
+  /** Équivalent en grammes de la mesure saisie */
+  grams?: number;
   sort_order?: number;
+}
+
+export interface CookingFat {
+  type: string;
+  quantity: number;
+  unit: string;
 }
 
 export interface NutritionData {
@@ -43,6 +53,9 @@ export interface NutritionData {
   fiberG: number;
   tips: string;
   estimatedIngredients?: Ingredient[];
+  /** Précisions qui amélioreraient l'estimation */
+  missingInfo?: string[];
+  confidence?: string;
 }
 
 export interface Recipe {
@@ -67,6 +80,10 @@ export interface Recipe {
   nutrition_tips: string | null;
   ai_detected_foods: string[];
   ingredients?: Ingredient[];
+  cooking_fat_type?: string | null;
+  cooking_fat_grams?: number | null;
+  total_cooked_weight_g?: number | null;
+  extras?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -127,4 +144,8 @@ export interface CreateRecipeInput {
   servings?: number;
   ingredients: Ingredient[];
   nutrition?: Partial<NutritionData>;
+  cooking_fat_type?: string;
+  cooking_fat_grams?: number;
+  total_cooked_weight_g?: number;
+  extras?: string;
 }

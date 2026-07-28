@@ -22,6 +22,8 @@ import { isDemoModeClient } from "@/lib/demo";
 import { getWeekStart, mergeIngredients, categorizeIngredient } from "@/lib/utils/shopping-list";
 import { normalizeIngredientName, getIngredientKey } from "@/lib/utils/ingredient-normalize";
 import { compressImage } from "@/lib/utils/image-compress";
+import { resolveGramOverrides } from "@/lib/utils/weight-resolver";
+import { toGrams } from "@/lib/utils/unit-convert";
 
 const STORAGE_KEYS = {
   recipes: "cherry_recipes",
@@ -214,10 +216,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     const normalizedInput = {
       ...input,
       photo_url,
-      ingredients: input.ingredients.map((ing) => ({
-        ...ing,
-        name: normalizeIngredientName(ing.name),
-      })),
+      ingredients: input.ingredients.map((ing) => {
+        const name = normalizeIngredientName(ing.name);
+        return {
+          ...ing,
+          name,
+          grams: ing.grams ?? toGrams(name, ing.quantity, ing.unit) ?? undefined,
+        };
+      }),
     };
 
     if (!useLocalOnly()) {
@@ -255,6 +261,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       nutrition_tips: normalizedInput.nutrition?.tips ?? null,
       ai_detected_foods: normalizedInput.nutrition?.detectedFoods ?? [],
       ingredients: normalizedInput.ingredients,
+      cooking_fat_type: normalizedInput.cooking_fat_type ?? null,
+      cooking_fat_grams: normalizedInput.cooking_fat_grams ?? null,
+      total_cooked_weight_g: normalizedInput.total_cooked_weight_g ?? null,
+      extras: normalizedInput.extras ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -368,7 +378,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     async (plan: MealPlan) => {
       const recipeIds = (plan.items ?? []).map((i) => i.recipe_id).filter(Boolean) as string[];
       const selectedRecipes = recipes.filter((r) => recipeIds.includes(r.id));
-      const merged = mergeIngredients(selectedRecipes.flatMap((r) => r.ingredients ?? []));
+      const allIngredients = selectedRecipes.flatMap((r) => r.ingredients ?? []);
+      const gramOverrides = await resolveGramOverrides(allIngredients);
+      const merged = mergeIngredients(allIngredients, gramOverrides);
 
       if (!useLocalOnly()) {
         const res = await fetch("/api/shopping-lists", {
