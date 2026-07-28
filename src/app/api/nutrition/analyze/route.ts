@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { analyzeNutrition } from "@/lib/openai/nutrition";
+import { MISSING_KEY_MESSAGE, describeOpenAIError } from "@/lib/openai/errors";
 import type { CookingFat, CookingType, Ingredient } from "@/types";
 
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json(
-      { error: "Clé OpenAI non configurée. Ajoutez OPENAI_API_KEY dans .env.local" },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: MISSING_KEY_MESSAGE }, { status: 503 });
   }
 
   try {
@@ -53,9 +51,10 @@ export async function POST(request: Request) {
     return NextResponse.json(nutrition);
   } catch (error) {
     console.error("Nutrition analysis error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de l'analyse nutritionnelle" },
-      { status: 500 }
+    const { error: message, status } = describeOpenAIError(
+      error,
+      "Erreur lors de l'analyse nutritionnelle"
     );
+    return NextResponse.json({ error: message }, { status });
   }
 }

@@ -10,6 +10,7 @@ interface SnackSheetProps {
   dayLabel: string;
   savedSnacks: Recipe[];
   onQuickAdd: (name: string, quantity?: string) => Promise<QuickNutrition>;
+  onManualAdd: (name: string, calories: number) => Promise<void>;
   onPickSaved: (recipeId: string) => void;
   onClose: () => void;
 }
@@ -18,11 +19,13 @@ export function SnackSheet({
   dayLabel,
   savedSnacks,
   onQuickAdd,
+  onManualAdd,
   onPickSaved,
   onClose,
 }: SnackSheetProps) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [calories, setCalories] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<QuickNutrition | null>(null);
@@ -38,6 +41,22 @@ export function SnackSheet({
       setQuantity("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analyse impossible");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualAdd = async () => {
+    const kcal = Number(calories);
+    if (!name.trim() || !Number.isFinite(kcal) || kcal <= 0 || loading) return;
+    setLoading(true);
+    try {
+      await onManualAdd(name.trim(), kcal);
+      setName("");
+      setQuantity("");
+      setCalories("");
+      setError(null);
+      onClose();
     } finally {
       setLoading(false);
     }
@@ -104,7 +123,33 @@ export function SnackSheet({
               )}
             </Button>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <div className="space-y-2 rounded-2xl border border-red-500/30 bg-red-500/5 p-3">
+                <p className="text-sm text-red-500 leading-snug">{error}</p>
+                <p className="text-xs text-muted">
+                  Tu peux saisir les calories lues sur l&apos;emballage.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    value={calories}
+                    onChange={(e) => setCalories(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleManualAdd()}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="kcal"
+                    className="w-24 h-11 px-3 rounded-xl bg-surface border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  />
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={handleManualAdd}
+                    disabled={!name.trim() || !calories || loading}
+                  >
+                    Ajouter sans l&apos;IA
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {result && (

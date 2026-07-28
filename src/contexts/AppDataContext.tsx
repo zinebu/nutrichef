@@ -158,6 +158,7 @@ interface AppDataContextValue {
   setDayRecipe: (day: number, slot: MealSlot, recipeId: string | null) => Promise<void>;
   addSnack: (day: number, recipeId: string) => Promise<void>;
   addQuickSnack: (day: number, name: string, quantity?: string) => Promise<QuickNutrition>;
+  addManualSnack: (day: number, name: string, calories: number) => Promise<void>;
   removeMealItem: (item: MealPlanItem) => Promise<void>;
   defaultBreakfastId: string | null;
   setDefaultBreakfast: (recipeId: string | null) => void;
@@ -503,6 +504,22 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [createRecipe, addSnack]
   );
 
+  /** Repli sans IA : les calories lues sur l'emballage */
+  const addManualSnack = useCallback(
+    async (dayOfWeek: number, name: string, calories: number) => {
+      const recipe = await createRecipe({
+        name,
+        category: "snack",
+        tags: [],
+        servings: 1,
+        ingredients: [{ name, quantity: 1, unit: "pièce" }],
+        nutrition: { caloriesTotal: calories, caloriesPerServing: calories },
+      });
+      await addSnack(dayOfWeek, recipe.id);
+    },
+    [createRecipe, addSnack]
+  );
+
   const setDefaultBreakfast = useCallback((recipeId: string | null) => {
     setDefaultBreakfastId(recipeId);
     setDefaultBreakfastState(recipeId);
@@ -665,6 +682,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setDayRecipe,
       addSnack,
       addQuickSnack,
+      addManualSnack,
       removeMealItem,
       defaultBreakfastId,
       setDefaultBreakfast,
@@ -689,6 +707,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setDayRecipe,
       addSnack,
       addQuickSnack,
+      addManualSnack,
       removeMealItem,
       defaultBreakfastId,
       setDefaultBreakfast,
@@ -733,6 +752,7 @@ export function useMealPlan() {
     setDayRecipe: ctx.setDayRecipe,
     addSnack: ctx.addSnack,
     addQuickSnack: ctx.addQuickSnack,
+    addManualSnack: ctx.addManualSnack,
     removeMealItem: ctx.removeMealItem,
     defaultBreakfastId: ctx.defaultBreakfastId,
     setDefaultBreakfast: ctx.setDefaultBreakfast,

@@ -105,6 +105,7 @@ export function DayPlanner({ day }: { day: number }) {
     setDayRecipe,
     addSnack,
     addQuickSnack,
+    addManualSnack,
     removeMealItem,
     defaultBreakfastId,
     setDefaultBreakfast,
@@ -351,6 +352,7 @@ export function DayPlanner({ day }: { day: number }) {
           dayLabel={dayLabel}
           savedSnacks={savedSnacks}
           onQuickAdd={(name, quantity) => addQuickSnack(day, name, quantity)}
+          onManualAdd={(name, calories) => addManualSnack(day, name, calories)}
           onPickSaved={(recipeId) => addSnack(day, recipeId)}
           onClose={() => setSnackOpen(false)}
         />
