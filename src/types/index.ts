@@ -112,6 +112,10 @@ export interface DaySuggestions {
 
 export interface QuickNutrition {
   name: string;
+  /** Marque reconnue par l'IA, vide si le produit est générique */
+  brand: string;
+  /** Nature du produit : barre chocolatée, biscuit sablé, chips… */
+  productType: string;
   servingDescription: string;
   caloriesPerServing: number;
   proteinsG: number;

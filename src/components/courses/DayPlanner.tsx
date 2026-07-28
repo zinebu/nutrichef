@@ -120,8 +120,12 @@ export function DayPlanner({ day }: { day: number }) {
   const total = dayCalories(mealPlan, recipes, day);
   const snacks = snacksForDay(mealPlan, recipes, day);
   const emptySlots = emptySlotsForDay(mealPlan, recipes, day);
-  const savedSnacks = useMemo(
+  const savedProducts = useMemo(
     () => recipes.filter((r) => r.category === "snack").slice(0, 8),
+    [recipes]
+  );
+  const homemadeRecipes = useMemo(
+    () => recipes.filter((r) => r.category !== "snack"),
     [recipes]
   );
 
@@ -350,10 +354,11 @@ export function DayPlanner({ day }: { day: number }) {
       {snackOpen && (
         <SnackSheet
           dayLabel={dayLabel}
-          savedSnacks={savedSnacks}
+          homemadeRecipes={homemadeRecipes}
+          savedProducts={savedProducts}
           onQuickAdd={(name, quantity) => addQuickSnack(day, name, quantity)}
           onManualAdd={(name, calories) => addManualSnack(day, name, calories)}
-          onPickSaved={(recipeId) => addSnack(day, recipeId)}
+          onPickRecipe={(recipeId) => addSnack(day, recipeId)}
           onClose={() => setSnackOpen(false)}
         />
       )}

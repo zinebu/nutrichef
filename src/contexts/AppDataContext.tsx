@@ -146,6 +146,25 @@ async function shrinkRecipePhotos(recipes: Recipe[]): Promise<Recipe[]> {
   return result;
 }
 
+/** Vignette générée pour un snack acheté, silencieuse en cas d'échec */
+async function illustrateSnack(nutrition: QuickNutrition): Promise<string | null> {
+  try {
+    const res = await fetch("/api/images/product", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: nutrition.name,
+        productType: nutrition.productType,
+      }),
+    });
+    if (!res.ok) return null;
+    const { image } = await res.json();
+    return image ? await compressImage(image, 480, 0.8) : null;
+  } catch {
+    return null;
+  }
+}
+
 async function normalizeRecipeInput(input: CreateRecipeInput) {
   let photo_url = input.photo_url;
   if (photo_url?.startsWith("data:")) {
@@ -536,15 +555,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       }
       const nutrition: QuickNutrition = await res.json();
 
-      const recipe = await createRecipe({
+      const input: CreateRecipeInput = {
         name: nutrition.name,
-        description: nutrition.servingDescription,
+        description: [nutrition.productType, nutrition.servingDescription]
+          .filter(Boolean)
+          .join(" · "),
         category: "snack",
         tags: [],
         servings: 1,
         ingredients: [{ name: nutrition.name, quantity: 1, unit: "pièce" }],
         nutrition: {
-          detectedFoods: [],
+          detectedFoods: [nutrition.brand, nutrition.productType].filter(Boolean),
           caloriesTotal: nutrition.caloriesPerServing,
           caloriesPerServing: nutrition.caloriesPerServing,
           proteinsG: nutrition.proteinsG,
@@ -554,12 +575,21 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           fiberG: nutrition.fiberG,
           tips: nutrition.tips ?? "",
         },
-      });
+      };
 
+      const recipe = await createRecipe(input);
       await addSnack(dayOfWeek, recipe.id);
+
+      // L'illustration arrive après coup : le snack est déjà utilisable
+      illustrateSnack(nutrition)
+        .then((photo) => {
+          if (photo) updateRecipe(recipe.id, { ...input, photo_url: photo });
+        })
+        .catch(() => {});
+
       return nutrition;
     },
-    [createRecipe, addSnack]
+    [createRecipe, updateRecipe, addSnack]
   );
 
   /** Repli sans IA : les calories lues sur l'emballage */

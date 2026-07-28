@@ -34,17 +34,23 @@ export default function DashboardPage() {
   const currentSlotLabel =
     MEAL_SLOTS.find((slot) => slot.value === currentSlot)?.label ?? "Au menu";
 
-  const favorites = useMemo(
-    () => recipes.filter((r) => r.is_favorite).slice(0, 8),
+  // Les snacks achetés restent dans le planning et les recettes, pas sur l'accueil
+  const cookable = useMemo(
+    () => recipes.filter((r) => r.category !== "snack"),
     [recipes]
   );
 
-  const recent = useMemo(() => recipes.slice(0, 8), [recipes]);
+  const favorites = useMemo(
+    () => cookable.filter((r) => r.is_favorite).slice(0, 8),
+    [cookable]
+  );
+
+  const recent = useMemo(() => cookable.slice(0, 8), [cookable]);
 
   const carouselRecipes = favorites.length > 0 ? favorites : recent;
   const carouselTitle = favorites.length > 0 ? "Mes favoris" : "Récentes";
 
-  const favoriteCount = recipes.filter((r) => r.is_favorite).length;
+  const favoriteCount = cookable.filter((r) => r.is_favorite).length;
   const shoppingLeft = (list?.items ?? []).filter((i) => !i.is_checked).length;
 
   if (loading) {
@@ -62,7 +68,7 @@ export default function DashboardPage() {
   return (
     <main className="max-w-lg mx-auto pb-6">
       <HomeHero
-        recipeCount={recipes.length}
+        recipeCount={cookable.length}
         favoriteCount={favoriteCount}
         shoppingLeft={shoppingLeft}
       />
