@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -33,6 +32,8 @@ import {
   markBreakfastApplied,
   setDefaultBreakfastId,
 } from "@/lib/preferences";
+import { getUserScopedStorageKey } from "@/lib/storage-scopes";
+import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEYS = {
   recipes: "cherry_recipes",
@@ -100,26 +101,27 @@ const DEMO_RECIPES: Recipe[] = [
   },
 ];
 
-function loadFromStorage<T>(key: string, fallback: T): T {
+function loadFromStorage<T>(key: string, fallback: T, userId?: string | null): T {
+  const scopedKey = getUserScopedStorageKey(key, userId ?? "local");
   try {
-    const data = localStorage.getItem(key);
+    const data = localStorage.getItem(scopedKey);
     return data ? JSON.parse(data) : fallback;
   } catch {
     return fallback;
   }
 }
 
-let saveTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+function saveToStorage<T>(key: string, data: T, userId?: string | null) {
+  const scopedKey = getUserScopedStorageKey(key, userId ?? "local");
+  try {
+    localStorage.setItem(scopedKey, JSON.stringify(data));
+  } catch {
+    // Quota dépassé — ignorer silencieusement
+  }
+}
 
-function saveToStorageDebounced<T>(key: string, data: T) {
-  clearTimeout(saveTimers[key]);
-  saveTimers[key] = setTimeout(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch {
-      // Quota dépassé — ignorer silencieusement
-    }
-  }, 300);
+function saveToStorageDebounced<T>(key: string, data: T, userId?: string | null) {
+  saveToStorage(key, data, userId);
 }
 
 function useLocalOnly(): boolean {
@@ -142,7 +144,7 @@ async function shrinkRecipePhotos(recipes: Recipe[]): Promise<Recipe[]> {
       return recipe;
     })
   );
-  if (changed) saveToStorageDebounced(STORAGE_KEYS.recipes, result);
+  if (changed) saveToStorageDebounced(STORAGE_KEYS.recipes, result, "local");
   return result;
 }
 
@@ -222,24 +224,50 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [list, setList] = useState<ShoppingList | null>(null);
   const [listLoading, setListLoading] = useState(true);
   const [defaultBreakfastId, setDefaultBreakfastState] = useState<string | null>(null);
-  const initialized = useRef(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const weekStart = getWeekStart();
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    let active = true;
 
-    const localRecipes = loadFromStorage<Recipe[]>(STORAGE_KEYS.recipes, DEMO_RECIPES);
-    setRecipes(localRecipes.length ? localRecipes : DEMO_RECIPES);
+    const loadSession = async () => {
+      if (useLocalOnly()) {
+        setUserId("local");
+        return;
+      }
+
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        if (!active) return;
+        setUserId(data.user?.id ?? "local");
+      } catch {
+        if (active) setUserId("local");
+      }
+    };
+
+    void loadSession();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const fallbackRecipes = useLocalOnly() ? DEMO_RECIPES : [];
+    const localRecipes = loadFromStorage<Recipe[]>(STORAGE_KEYS.recipes, fallbackRecipes, userId);
+
+    setRecipes(localRecipes.length ? localRecipes : fallbackRecipes);
     setRecipesLoading(false);
-    setMealPlan(loadFromStorage(STORAGE_KEYS.mealPlan, null));
+    setMealPlan(loadFromStorage(STORAGE_KEYS.mealPlan, null, userId));
     setMealPlanLoading(false);
-    setList(loadFromStorage(STORAGE_KEYS.shoppingList, null));
+    setList(loadFromStorage(STORAGE_KEYS.shoppingList, null, userId));
     setListLoading(false);
-    setDefaultBreakfastState(getDefaultBreakfastId());
+    setDefaultBreakfastState(getDefaultBreakfastId(userId));
 
-    shrinkRecipePhotos(localRecipes.length ? localRecipes : DEMO_RECIPES).then(setRecipes);
+    if (localRecipes.length || fallbackRecipes.length) {
+      shrinkRecipePhotos(localRecipes.length ? localRecipes : fallbackRecipes).then(setRecipes);
+    }
 
     if (useLocalOnly()) return;
 
@@ -263,7 +291,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (data) setList(data);
       })
       .catch(() => {});
-  }, [weekStart]);
+  }, [userId, weekStart]);
 
   const createRecipe = useCallback(async (input: CreateRecipeInput) => {
     const normalizedInput = await normalizeRecipeInput(input);
@@ -313,11 +341,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     };
     setRecipes((prev) => {
       const updated = [newRecipe, ...prev];
-      saveToStorageDebounced(STORAGE_KEYS.recipes, updated);
+      saveToStorageDebounced(STORAGE_KEYS.recipes, updated, userId);
       return updated;
     });
     return newRecipe;
-  }, []);
+  }, [userId]);
 
   const updateRecipe = useCallback(async (id: string, input: CreateRecipeInput) => {
     const normalizedInput = await normalizeRecipeInput(input);
@@ -366,10 +394,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             }
           : recipe
       );
-      saveToStorageDebounced(STORAGE_KEYS.recipes, updated);
+      saveToStorageDebounced(STORAGE_KEYS.recipes, updated, userId);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   const toggleFavorite = useCallback(async (id: string) => {
     if (!useLocalOnly()) {
@@ -384,19 +412,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const updated = prev.map((r) =>
         r.id === id ? { ...r, is_favorite: !r.is_favorite } : r
       );
-      saveToStorageDebounced(STORAGE_KEYS.recipes, updated);
+      saveToStorageDebounced(STORAGE_KEYS.recipes, updated, userId);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   const deleteRecipe = useCallback(async (id: string) => {
     if (!useLocalOnly()) await fetch(`/api/recipes/${id}`, { method: "DELETE" });
     setRecipes((prev) => {
       const updated = prev.filter((r) => r.id !== id);
-      saveToStorageDebounced(STORAGE_KEYS.recipes, updated);
+      saveToStorageDebounced(STORAGE_KEYS.recipes, updated, userId);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   const filterRecipes = useCallback(
     (filters: RecipeFilters): Recipe[] =>
@@ -433,11 +461,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           items: [],
         };
         const updated = { ...plan, items: mutate([...(plan.items ?? [])]) };
-        saveToStorageDebounced(STORAGE_KEYS.mealPlan, updated);
+        saveToStorageDebounced(STORAGE_KEYS.mealPlan, updated, userId);
         return updated;
       });
     },
-    [weekStart]
+    [userId, weekStart]
   );
 
   const setDayRecipe = useCallback(
@@ -608,10 +636,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [createRecipe, addSnack]
   );
 
-  const setDefaultBreakfast = useCallback((recipeId: string | null) => {
-    setDefaultBreakfastId(recipeId);
-    setDefaultBreakfastState(recipeId);
-  }, []);
+  const setDefaultBreakfast = useCallback(
+    (recipeId: string | null) => {
+      setDefaultBreakfastId(recipeId, userId);
+      setDefaultBreakfastState(recipeId);
+    },
+    [userId]
+  );
 
   /** Remplit d'un coup les créneaux petit déjeuner encore vides de la semaine */
   const applyDefaultBreakfast = useCallback(
@@ -659,14 +690,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Le petit déjeuner par défaut se pose tout seul une fois par semaine.
   // Retirer un jour ensuite ne le fait pas revenir.
   useEffect(() => {
-    if (mealPlanLoading || recipesLoading) return;
+    if (mealPlanLoading || recipesLoading || !userId) return;
     if (!defaultBreakfastId) return;
-    if (getBreakfastAppliedWeek() === weekStart) return;
+    if (getBreakfastAppliedWeek(userId) === weekStart) return;
     if (!recipes.some((r) => r.id === defaultBreakfastId)) return;
-    markBreakfastApplied(weekStart);
+    markBreakfastApplied(weekStart, userId);
     applyDefaultBreakfast(defaultBreakfastId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mealPlanLoading, recipesLoading, defaultBreakfastId, weekStart, recipes.length]);
+  }, [mealPlanLoading, recipesLoading, defaultBreakfastId, weekStart, recipes.length, userId]);
 
   const generateFromMealPlan = useCallback(
     async (plan: MealPlan) => {
@@ -699,10 +730,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           shopping_list_id: "local",
         })),
       };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, localList);
+      saveToStorageDebounced(STORAGE_KEYS.shoppingList, localList, userId);
       setList(localList);
     },
-    [recipes]
+    [recipes, userId]
   );
 
   const toggleItem = useCallback((itemId: string) => {
@@ -714,10 +745,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           i.id === itemId ? { ...i, is_checked: !i.is_checked } : i
         ),
       };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated);
+      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   const addItem = useCallback((name: string) => {
     const normalized = normalizeIngredientName(name);
@@ -743,19 +774,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         name: prev?.name ?? "Liste de courses",
         items: [...items, newItem],
       };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated);
+      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   const removeItem = useCallback((itemId: string) => {
     setList((prev) => {
       if (!prev?.items) return prev;
       const updated = { ...prev, items: prev.items.filter((i) => i.id !== itemId) };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated);
+      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   const value = useMemo(
     () => ({
