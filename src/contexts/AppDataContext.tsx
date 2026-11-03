@@ -33,7 +33,10 @@ import {
   setDefaultBreakfastId,
 } from "@/lib/preferences";
 import { getUserScopedStorageKey } from "@/lib/storage-scopes";
-import { toggleShoppingListItem } from "@/lib/shopping-list-state.js";
+import {
+  mergeShoppingListState,
+  toggleShoppingListItem,
+} from "@/lib/shopping-list-state.js";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEYS = {
@@ -103,21 +106,40 @@ const DEMO_RECIPES: Recipe[] = [
 ];
 
 function loadFromStorage<T>(key: string, fallback: T, userId?: string | null): T {
-  const scopedKey = getUserScopedStorageKey(key, userId ?? "local");
-  try {
-    const data = localStorage.getItem(scopedKey);
-    return data ? JSON.parse(data) : fallback;
-  } catch {
-    return fallback;
+  const userKey = getUserScopedStorageKey(key, userId ?? "local");
+  const keysToTry = new Set<string>([userKey]);
+
+  if (userId && userId !== "local") {
+    keysToTry.add(getUserScopedStorageKey(key, "local"));
   }
+
+  for (const candidateKey of keysToTry) {
+    try {
+      const data = localStorage.getItem(candidateKey);
+      if (data) return JSON.parse(data);
+    } catch {
+      // Ignore invalid JSON and continue to the next fallback key.
+    }
+  }
+
+  return fallback;
 }
 
 function saveToStorage<T>(key: string, data: T, userId?: string | null) {
-  const scopedKey = getUserScopedStorageKey(key, userId ?? "local");
-  try {
-    localStorage.setItem(scopedKey, JSON.stringify(data));
-  } catch {
-    // Quota dépassé — ignorer silencieusement
+  const keysToWrite = new Set<string>([
+    getUserScopedStorageKey(key, userId ?? "local"),
+  ]);
+
+  if (userId && userId !== "local") {
+    keysToWrite.add(getUserScopedStorageKey(key, "local"));
+  }
+
+  for (const candidateKey of keysToWrite) {
+    try {
+      localStorage.setItem(candidateKey, JSON.stringify(data));
+    } catch {
+      // Quota dépassé — ignorer silencieusement
+    }
   }
 }
 
@@ -289,7 +311,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     fetch("/api/shopping-lists")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data) setList(data);
+        const localList = loadFromStorage(STORAGE_KEYS.shoppingList, null, userId);
+        setList(mergeShoppingListState(localList, data));
       })
       .catch(() => {});
   }, [userId, weekStart]);
