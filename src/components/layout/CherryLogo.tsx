@@ -27,7 +27,7 @@ export function CherryLogo({ size = "md", className, animate = false }: CherryLo
       )}
     >
       <CherryIcon size={s.icon} />
-      <span className={cn(s.text, "font-handwritten tracking-tight")}>{APP_NAME}</span>
+      <span className={cn(s.text, "font-medium tracking-[-0.04em]")}>{APP_NAME}</span>
     </div>
   );
 }

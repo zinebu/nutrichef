@@ -59,7 +59,7 @@ export default function ProfilPage() {
           <div>
             <p className="font-semibold">{email ?? "Utilisateur"}</p>
             <p className="text-sm text-muted">
-              {isDemo ? "Données sur cet appareil" : "Compte Cherry"}
+              {isDemo ? "Données sur cet appareil" : "Compte PSK"}
             </p>
           </div>
         </Card>

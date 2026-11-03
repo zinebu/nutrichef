@@ -27,6 +27,47 @@ export async function GET() {
   });
 }
 
+export async function PATCH(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
+  const { itemId, is_checked } = await request.json();
+
+  if (!itemId) {
+    return NextResponse.json({ error: "itemId requis" }, { status: 400 });
+  }
+
+  const { data: item, error } = await supabase
+    .from("shopping_list_items")
+    .update({ is_checked })
+    .eq("id", itemId)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const { data: list } = await supabase
+    .from("shopping_lists")
+    .select("*, shopping_list_items(*)")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  return NextResponse.json({
+    ...(list ?? { id: item.shopping_list_id, user_id: user.id, meal_plan_id: null, name: "Liste de courses" }),
+    items: list?.shopping_list_items ?? [],
+  });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {

@@ -17,8 +17,6 @@ export function HomeHero({ recipeCount, favoriteCount, shoppingLeft }: HomeHeroP
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 home-hero-bg" aria-hidden />
-      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-accent/10 blur-2xl home-float" aria-hidden />
-      <div className="absolute top-24 -left-10 w-32 h-32 rounded-full bg-accent/5 blur-xl home-float-delayed" aria-hidden />
 
       <div className="relative px-4 pt-safe pb-5 max-w-lg mx-auto">
         <div className="flex items-center justify-between h-14">

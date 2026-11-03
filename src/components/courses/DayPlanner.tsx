@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { RecipeThumb } from "./RecipeThumb";
 import { MealRecipePicker } from "./MealRecipePicker";
 import { SnackSheet } from "./SnackSheet";
+import { filterVisibleToFriends } from "@/lib/recipe-visibility";
 import { DAILY_CALORIE_TARGET, DAYS_OF_WEEK, MEAL_SLOTS } from "@/lib/constants";
 import {
   dayCalories,
@@ -152,15 +153,13 @@ export function DayPlanner({ day }: { day: number }) {
           planned,
           emptySlots,
           dailyTarget: DAILY_CALORIE_TARGET,
-          library: recipes
-            .filter((r) => r.category !== "snack")
-            .map((r) => ({
-              id: r.id,
-              name: r.name,
-              category: r.category,
-              calories: r.calories_per_serving,
-              tags: r.tags,
-            })),
+          library: filterVisibleToFriends(recipes).map((r) => ({
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            calories: r.calories_per_serving,
+            tags: r.tags,
+          })),
         }),
       });
 

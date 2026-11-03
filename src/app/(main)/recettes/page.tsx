@@ -237,7 +237,7 @@ function EmptyState({ hasRecipes }: { hasRecipes: boolean }) {
       <p className="text-sm text-muted mt-2 max-w-xs">
         {hasRecipes
           ? "Essaie un autre mot-clé ou enlève quelques filtres."
-          : "Prends une photo de ton plat, Cherry s'occupe de la nutrition."}
+          : "Prends une photo de ton plat, PSK s'occupe de la nutrition."}
       </p>
       {!hasRecipes && (
         <Link

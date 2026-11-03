@@ -15,17 +15,18 @@ export function CherryIcon({ className, size = 24 }: CherryIconProps) {
       className={cn("shrink-0", className)}
       aria-hidden
     >
+      <rect x="3" y="3" width="18" height="18" rx="6" fill="currentColor" opacity="0.09" />
       <path
-        d="M12 3C12 3 14 6 14 9C14 10.1 13.1 11 12 11C10.9 11 10 10.1 10 9C10 6 12 3 12 3Z"
-        fill="currentColor"
-        opacity="0.9"
-      />
-      <circle cx="8.5" cy="16" r="4" fill="currentColor" />
-      <circle cx="15.5" cy="17" r="3.5" fill="currentColor" opacity="0.85" />
-      <path
-        d="M12 3V8M12 8C10 8 7 9 6 11"
+        d="M9 7.5V16.5M9 7.5H13.2C15.4 7.5 16.8 8.8 16.8 10.8C16.8 12.9 15.4 14.2 13.2 14.2H9"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14.4 14.2L17.5 16.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
         strokeLinecap="round"
       />
     </svg>

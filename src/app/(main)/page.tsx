@@ -7,6 +7,7 @@ import { WeekStrip } from "@/components/home/WeekStrip";
 import { RecipeCarousel } from "@/components/home/RecipeCarousel";
 import { HomeQuickActions } from "@/components/home/HomeQuickActions";
 import { useRecipes, useMealPlan, useShoppingList } from "@/hooks/useAppData";
+import { filterVisibleToFriends } from "@/lib/recipe-visibility";
 import { getCurrentMealSlot, getTodayDayIndex } from "@/lib/utils/date";
 import { MEAL_SLOTS } from "@/lib/constants";
 import { dayCalories, mainRecipeForDay, recipeForSlot } from "@/lib/utils/meal-plan";
@@ -34,9 +35,10 @@ export default function DashboardPage() {
   const currentSlotLabel =
     MEAL_SLOTS.find((slot) => slot.value === currentSlot)?.label ?? "Au menu";
 
-  // Les snacks achetés restent dans le planning et les recettes, pas sur l'accueil
+  // Les petits déjeuners et snacks restent réservés au planning perso ; on les masque dans
+  // les listes visibles au-delà du compte utilisateur.
   const cookable = useMemo(
-    () => recipes.filter((r) => r.category !== "snack"),
+    () => filterVisibleToFriends(recipes),
     [recipes]
   );
 

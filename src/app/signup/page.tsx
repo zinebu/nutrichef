@@ -9,6 +9,7 @@ import { CherryLogo } from "@/components/layout/CherryLogo";
 import { Mail } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { disableDemoMode } from "@/lib/demo";
+import { getAppUrl } from "@/lib/app-url";
 
 const ERROR_MESSAGES: Record<string, string> = {
   "User already registered": "Cet email est déjà utilisé. Connecte-toi.",
@@ -47,7 +48,7 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName.trim() },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${getAppUrl()}/auth/callback`,
       },
     });
 

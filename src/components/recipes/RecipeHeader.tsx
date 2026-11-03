@@ -35,10 +35,6 @@ export function RecipeHeader({
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 home-hero-bg" aria-hidden />
-      <div
-        className="absolute -top-10 right-4 w-36 h-36 rounded-full bg-accent/10 blur-2xl home-float"
-        aria-hidden
-      />
 
       <div className="relative px-4 pt-safe pb-4 max-w-lg mx-auto">
         <div className="flex items-center justify-between h-14">

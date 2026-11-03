@@ -33,6 +33,7 @@ import {
   setDefaultBreakfastId,
 } from "@/lib/preferences";
 import { getUserScopedStorageKey } from "@/lib/storage-scopes";
+import { toggleShoppingListItem } from "@/lib/shopping-list-state.js";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEYS = {
@@ -736,19 +737,39 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [recipes, userId]
   );
 
-  const toggleItem = useCallback((itemId: string) => {
-    setList((prev) => {
-      if (!prev?.items) return prev;
-      const updated = {
-        ...prev,
-        items: prev.items.map((i) =>
-          i.id === itemId ? { ...i, is_checked: !i.is_checked } : i
-        ),
-      };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
-      return updated;
-    });
-  }, [userId]);
+  const toggleItem = useCallback(
+    async (itemId: string) => {
+      const nextChecked = !(list?.items?.find((i) => i.id === itemId)?.is_checked ?? false);
+
+      setList((prev) => {
+        if (!prev?.items) return prev;
+        const updated = toggleShoppingListItem(prev, itemId);
+        saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
+        return updated;
+      });
+
+      if (useLocalOnly()) return;
+
+      try {
+        const res = await fetch("/api/shopping-lists", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itemId, is_checked: nextChecked }),
+        });
+
+        if (!res.ok) return;
+
+        const updatedList = await res.json();
+        if (updatedList) {
+          setList(updatedList);
+          saveToStorageDebounced(STORAGE_KEYS.shoppingList, updatedList, userId);
+        }
+      } catch {
+        // Intentionally ignored: local state is already saved.
+      }
+    },
+    [list, userId]
+  );
 
   const addItem = useCallback((name: string) => {
     const normalized = normalizeIngredientName(name);

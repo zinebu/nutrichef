@@ -60,7 +60,7 @@ export function InstallAppCard() {
     return (
       <Card className="flex items-center gap-3 bg-accent/5 border-accent/20">
         <Smartphone className="w-5 h-5 text-accent shrink-0" />
-        <p className="text-sm">Cherry est installée sur cet appareil.</p>
+        <p className="text-sm">PSK est installée sur cet appareil.</p>
       </Card>
     );
   }
@@ -71,7 +71,7 @@ export function InstallAppCard() {
         <div className="flex items-start gap-3">
           <Download className="w-5 h-5 text-accent shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-sm">Installer Cherry</p>
+            <p className="font-medium text-sm">Installer PSK</p>
             <p className="text-sm text-muted mt-1">
               Accède à tes recettes directement depuis l&apos;écran d&apos;accueil, comme une vraie app.
             </p>
@@ -98,7 +98,7 @@ export function InstallAppCard() {
           </div>
         </div>
         <ol className="text-sm text-muted space-y-2 pl-1 list-decimal list-inside">
-          <li>Ouvre Cherry dans <strong className="text-foreground">Safari</strong> (pas Chrome)</li>
+          <li>Ouvre PSK dans <strong className="text-foreground">Safari</strong> (pas Chrome)</li>
           <li>Appuie sur <strong className="text-foreground">Partager</strong> (icône carré avec flèche)</li>
           <li>Choisis <strong className="text-foreground">Sur l&apos;écran d&apos;accueil</strong></li>
           <li>Appuie sur <strong className="text-foreground">Ajouter</strong></li>
@@ -112,7 +112,7 @@ export function InstallAppCard() {
       <div className="flex items-start gap-3">
         <Smartphone className="w-5 h-5 text-accent shrink-0 mt-0.5" />
         <div>
-          <p className="font-medium text-sm">Installer Cherry</p>
+          <p className="font-medium text-sm">Installer PSK</p>
           <p className="text-sm text-muted mt-1">
             Ouvre l&apos;app dans Chrome, puis utilise le menu du navigateur →{" "}
             <strong className="text-foreground">Installer l&apos;application</strong> ou{" "}
