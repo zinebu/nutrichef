@@ -25,7 +25,7 @@ export function Checkbox({ checked, onChange, label, className }: CheckboxProps)
             : "border-border group-hover:border-accent/50"
         )}
       >
-        {checked && <Check className="w-4 h-4 text-white" />}
+        {checked && <Check className="w-4 h-4 text-accent-foreground" />}
       </button>
       {label && (
         <span

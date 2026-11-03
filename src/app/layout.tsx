@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Caveat } from "next/font/google";
+import { Outfit, Fraunces, Caveat } from "next/font/google";
 import "./globals.css";
 import { APP_NAME } from "@/lib/constants";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 const caveat = Caveat({
@@ -40,7 +46,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#c41e3a",
+  themeColor: "#1a6b4f",
 };
 
 export default function RootLayout({
@@ -49,7 +55,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${geist.variable} ${caveat.variable} h-full`} data-theme="light" suppressHydrationWarning>
+    <html
+      lang="fr"
+      className={`${outfit.variable} ${fraunces.variable} ${caveat.variable} h-full`}
+      data-theme="light"
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192" />

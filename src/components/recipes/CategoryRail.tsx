@@ -41,7 +41,7 @@ export function CategoryRail({ active, counts, onSelect }: CategoryRailProps) {
               className={cn(
                 "relative w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors",
                 isActive
-                  ? "bg-accent border-accent text-white shadow-md shadow-accent/25"
+                  ? "bg-accent border-accent text-accent-foreground shadow-md shadow-accent/25"
                   : "bg-surface border-border text-accent"
               )}
             >
@@ -50,7 +50,9 @@ export function CategoryRail({ active, counts, onSelect }: CategoryRailProps) {
                 <span
                   className={cn(
                     "absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full text-[10px] font-semibold flex items-center justify-center",
-                    isActive ? "bg-white text-accent" : "bg-accent text-white"
+                    isActive
+                      ? "bg-accent-foreground text-accent"
+                      : "bg-accent text-accent-foreground"
                   )}
                 >
                   {count}

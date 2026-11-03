@@ -52,10 +52,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center animate-logo-in">
+        <div className="text-center animate-logo-in space-y-3">
           <CherryLogo size="xl" className="justify-center" />
+          <p className="text-sm text-muted">Recettes, nutrition et courses</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4 animate-fade-up stagger-2">

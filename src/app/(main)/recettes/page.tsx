@@ -216,7 +216,7 @@ function Chip({
       className={cn(
         "tap-scale shrink-0 flex items-center gap-1.5 px-3.5 h-9 rounded-full text-xs font-medium border transition-colors",
         active
-          ? "bg-accent border-accent text-white shadow-sm shadow-accent/20"
+          ? "bg-accent border-accent text-accent-foreground shadow-sm shadow-accent/20"
           : "bg-surface border-border text-muted"
       )}
     >
@@ -242,7 +242,7 @@ function EmptyState({ hasRecipes }: { hasRecipes: boolean }) {
       {!hasRecipes && (
         <Link
           href="/recettes/nouvelle"
-          className="tap-scale mt-5 px-5 py-3 rounded-full bg-accent text-white text-sm font-medium shadow-lg shadow-accent/25"
+          className="tap-scale mt-5 px-5 py-3 rounded-full bg-accent text-accent-foreground text-sm font-medium shadow-lg shadow-accent/25"
         >
           Créer ma première recette
         </Link>

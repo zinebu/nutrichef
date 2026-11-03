@@ -8,7 +8,7 @@ export function HomeQuickActions() {
     <section className="grid grid-cols-2 gap-3 animate-fade-up stagger-4">
       <Link
         href="/recettes/nouvelle"
-        className="tap-scale col-span-2 relative overflow-hidden rounded-3xl bg-accent p-5 text-white shadow-lg shadow-accent/25"
+        className="tap-scale col-span-2 relative overflow-hidden rounded-3xl bg-accent p-5 text-accent-foreground shadow-lg shadow-accent/25"
       >
         <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" aria-hidden />
         <div className="absolute right-8 bottom-0 w-16 h-16 rounded-full bg-white/5" aria-hidden />

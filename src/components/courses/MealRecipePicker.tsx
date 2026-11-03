@@ -130,7 +130,7 @@ export function MealRecipePicker({
                       <RecipeThumb recipe={recipe} size="lg" className="rounded-none" />
                       {isSelected && (
                         <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-accent flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                          <Check className="w-4 h-4 text-accent-foreground" strokeWidth={3} />
                         </span>
                       )}
                       {isDefault && !isSelected && (

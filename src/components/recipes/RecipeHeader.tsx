@@ -102,7 +102,7 @@ function ViewButton({
       aria-label={label}
       className={cn(
         "w-9 h-10 rounded-full flex items-center justify-center transition-colors",
-        active ? "bg-accent text-white" : "text-muted"
+        active ? "bg-accent text-accent-foreground" : "text-muted"
       )}
     >
       {children}

@@ -30,10 +30,11 @@ export function HomeHero({ recipeCount, favoriteCount, shoppingLeft }: HomeHeroP
 
         <div className="mt-2 animate-fade-up">
           <p className="text-sm text-muted capitalize">{formatTodayDate()}</p>
-          <h1 className="font-handwritten text-[2.75rem] leading-tight text-accent mt-1">
-            {getGreeting()} !
+          <h1 className="font-display text-[2.35rem] leading-tight text-foreground mt-1 tracking-[-0.02em]">
+            {getGreeting()}
+            <span className="text-accent">.</span>
           </h1>
-          <p className="text-sm text-muted mt-1">Qu&apos;est-ce qu&apos;on cuisine aujourd&apos;hui ?</p>
+          <p className="text-sm text-muted mt-1.5">Qu&apos;est-ce qu&apos;on cuisine aujourd&apos;hui ?</p>
         </div>
 
         <div className="flex gap-2 mt-5 overflow-x-auto scrollbar-hide animate-fade-up stagger-1">

@@ -43,7 +43,7 @@ export function WeeklyPlanner({ onGenerateList }: { onGenerateList: () => void }
               className={cn(
                 "tap-scale shrink-0 w-14 py-2 rounded-2xl border flex flex-col items-center gap-1.5 transition-colors",
                 isSelected
-                  ? "bg-accent border-accent text-white shadow-md shadow-accent/25"
+                  ? "bg-accent border-accent text-accent-foreground shadow-md shadow-accent/25"
                   : "bg-surface border-border"
               )}
             >
@@ -68,7 +68,7 @@ export function WeeklyPlanner({ onGenerateList }: { onGenerateList: () => void }
               <span
                 className={cn(
                   "text-[9px] uppercase tracking-wide",
-                  isToday ? (isSelected ? "text-white/90" : "text-accent") : "opacity-0"
+                  isToday ? (isSelected ? "text-accent-foreground/90" : "text-accent") : "opacity-0"
                 )}
               >
                 Auj.

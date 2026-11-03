@@ -9,10 +9,10 @@ interface CherryLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 20, text: "text-2xl" },
-  md: { icon: 26, text: "text-3xl" },
-  lg: { icon: 32, text: "text-4xl" },
-  xl: { icon: 40, text: "text-5xl" },
+  sm: { icon: 22, text: "text-xl" },
+  md: { icon: 28, text: "text-2xl" },
+  lg: { icon: 36, text: "text-3xl" },
+  xl: { icon: 44, text: "text-4xl" },
 };
 
 export function CherryLogo({ size = "md", className, animate = false }: CherryLogoProps) {
@@ -21,13 +21,20 @@ export function CherryLogo({ size = "md", className, animate = false }: CherryLo
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 leading-none text-accent",
+        "inline-flex items-center gap-2 leading-none text-foreground",
         animate && "animate-logo-in",
         className
       )}
     >
-      <CherryIcon size={s.icon} className="opacity-90" />
-      <span className={cn(s.text, "font-medium tracking-[-0.04em]")}>{APP_NAME}</span>
+      <CherryIcon size={s.icon} />
+      <span
+        className={cn(
+          s.text,
+          "font-display font-semibold tracking-[-0.03em] text-accent"
+        )}
+      >
+        {APP_NAME}
+      </span>
     </div>
   );
 }

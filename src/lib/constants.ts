@@ -23,14 +23,14 @@ export const COOKING_TYPES: { value: CookingType; label: string }[] = [
 ];
 
 export const RECIPE_TAGS: { value: RecipeTag; label: string; color: string }[] = [
-  { value: "healthy", label: "Healthy", color: "bg-red-500/10 text-red-600" },
-  { value: "sucre", label: "Sucré", color: "bg-red-500/15 text-red-500" },
+  { value: "healthy", label: "Healthy", color: "bg-accent/10 text-accent" },
+  { value: "sucre", label: "Sucré", color: "bg-brand/15 text-brand" },
   { value: "proteine", label: "Protéiné", color: "bg-neutral-500/10 text-neutral-600" },
-  { value: "rapide", label: "Rapide", color: "bg-red-500/10 text-red-400" },
-  { value: "vegetarien", label: "Végétarien", color: "bg-red-500/10 text-red-600" },
+  { value: "rapide", label: "Rapide", color: "bg-accent/10 text-accent" },
+  { value: "vegetarien", label: "Végétarien", color: "bg-accent/15 text-accent" },
   { value: "sans_gluten", label: "Sans gluten", color: "bg-neutral-500/10 text-neutral-500" },
-  { value: "leger", label: "Léger", color: "bg-red-500/10 text-red-400" },
-  { value: "gourmand", label: "Gourmand", color: "bg-red-600/15 text-red-700" },
+  { value: "leger", label: "Léger", color: "bg-accent/10 text-accent" },
+  { value: "gourmand", label: "Gourmand", color: "bg-brand/15 text-brand" },
 ];
 
 /** Repère calorique quotidien utilisé pour équilibrer les suggestions */

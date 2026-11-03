@@ -90,11 +90,11 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center animate-logo-in">
+        <div className="text-center animate-logo-in space-y-3">
           <CherryLogo size="lg" className="justify-center" />
-          <p className="text-sm text-muted mt-3">Créer un compte</p>
+          <p className="text-sm text-muted">Créer un compte</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
