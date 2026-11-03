@@ -777,7 +777,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         const res = await fetch("/api/shopping-lists", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId, is_checked: nextChecked }),
+          body: JSON.stringify({ mode: "toggle", itemId, is_checked: nextChecked }),
         });
 
         if (!res.ok) return;
@@ -794,16 +794,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     [list, userId]
   );
 
-  const addItem = useCallback((name: string) => {
-    const normalized = normalizeIngredientName(name);
-    setList((prev) => {
-      const items = [...(prev?.items ?? [])];
-      if (items.some((i) => getIngredientKey(i.name) === getIngredientKey(normalized))) {
-        return prev;
-      }
+  const addItem = useCallback(
+    async (name: string) => {
+      const normalized = normalizeIngredientName(name);
       const newItem: ShoppingListItem = {
         id: crypto.randomUUID(),
-        shopping_list_id: prev?.id ?? "local",
+        shopping_list_id: list?.id ?? "local",
         name: normalized,
         quantity: null,
         unit: null,
@@ -811,26 +807,83 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         is_checked: false,
         is_manual: true,
       };
-      const updated = {
-        id: prev?.id ?? "local",
-        user_id: "local",
-        meal_plan_id: prev?.meal_plan_id ?? null,
-        name: prev?.name ?? "Liste de courses",
-        items: [...items, newItem],
-      };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
-      return updated;
-    });
-  }, [userId]);
 
-  const removeItem = useCallback((itemId: string) => {
-    setList((prev) => {
-      if (!prev?.items) return prev;
-      const updated = { ...prev, items: prev.items.filter((i) => i.id !== itemId) };
-      saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
-      return updated;
-    });
-  }, [userId]);
+      setList((prev) => {
+        const items = [...(prev?.items ?? [])];
+        if (items.some((i) => getIngredientKey(i.name) === getIngredientKey(normalized))) {
+          return prev;
+        }
+        const updated = {
+          id: prev?.id ?? "local",
+          user_id: "local",
+          meal_plan_id: prev?.meal_plan_id ?? null,
+          name: prev?.name ?? "Liste de courses",
+          items: [...items, newItem],
+        };
+        saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
+        return updated;
+      });
+
+      if (useLocalOnly()) return;
+
+      try {
+        const res = await fetch("/api/shopping-lists", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "add",
+            name: normalized,
+            quantity: null,
+            unit: null,
+            category: categorizeIngredient(normalized),
+          }),
+        });
+
+        if (!res.ok) return;
+
+        const updatedList = await res.json();
+        if (updatedList) {
+          setList(updatedList);
+          saveToStorageDebounced(STORAGE_KEYS.shoppingList, updatedList, userId);
+        }
+      } catch {
+        // Intentionally ignored: local state is already saved.
+      }
+    },
+    [list, userId]
+  );
+
+  const removeItem = useCallback(
+    async (itemId: string) => {
+      setList((prev) => {
+        if (!prev?.items) return prev;
+        const updated = { ...prev, items: prev.items.filter((i) => i.id !== itemId) };
+        saveToStorageDebounced(STORAGE_KEYS.shoppingList, updated, userId);
+        return updated;
+      });
+
+      if (useLocalOnly()) return;
+
+      try {
+        const res = await fetch("/api/shopping-lists", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "remove", itemId }),
+        });
+
+        if (!res.ok) return;
+
+        const updatedList = await res.json();
+        if (updatedList) {
+          setList(updatedList);
+          saveToStorageDebounced(STORAGE_KEYS.shoppingList, updatedList, userId);
+        }
+      } catch {
+        // Intentionally ignored: local state is already saved.
+      }
+    },
+    [userId]
+  );
 
   const value = useMemo(
     () => ({

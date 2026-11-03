@@ -37,24 +37,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  const { itemId, is_checked } = await request.json();
+  const body = await request.json();
+  const { mode, itemId, is_checked, name, quantity, unit, category } = body;
 
-  if (!itemId) {
-    return NextResponse.json({ error: "itemId requis" }, { status: 400 });
-  }
-
-  const { data: item, error } = await supabase
-    .from("shopping_list_items")
-    .update({ is_checked })
-    .eq("id", itemId)
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const { data: list } = await supabase
+  const { data: currentList } = await supabase
     .from("shopping_lists")
     .select("*, shopping_list_items(*)")
     .eq("user_id", user.id)
@@ -62,10 +48,123 @@ export async function PATCH(request: Request) {
     .limit(1)
     .single();
 
-  return NextResponse.json({
-    ...(list ?? { id: item.shopping_list_id, user_id: user.id, meal_plan_id: null, name: "Liste de courses" }),
-    items: list?.shopping_list_items ?? [],
-  });
+  if (mode === "toggle") {
+    if (!itemId) {
+      return NextResponse.json({ error: "itemId requis" }, { status: 400 });
+    }
+
+    const { data: item, error } = await supabase
+      .from("shopping_list_items")
+      .update({ is_checked })
+      .eq("id", itemId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const { data: updatedList } = await supabase
+      .from("shopping_lists")
+      .select("*, shopping_list_items(*)")
+      .eq("id", item.shopping_list_id)
+      .single();
+
+    return NextResponse.json({
+      ...updatedList,
+      items: updatedList?.shopping_list_items ?? [],
+    });
+  }
+
+  if (mode === "add") {
+    const listId = currentList?.id ?? null;
+    if (!listId) {
+      const { data: createdList, error: listError } = await supabase
+        .from("shopping_lists")
+        .insert({ user_id: user.id, name: "Liste de courses" })
+        .select()
+        .single();
+
+      if (listError) {
+        return NextResponse.json({ error: listError.message }, { status: 500 });
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("shopping_list_items")
+        .insert({
+          shopping_list_id: createdList.id,
+          name,
+          quantity,
+          unit,
+          category: category ?? "autres",
+          is_checked: false,
+          is_manual: true,
+        })
+        .select();
+
+      if (insertError) {
+        return NextResponse.json({ error: insertError.message }, { status: 500 });
+      }
+
+      const { data: fullList } = await supabase
+        .from("shopping_lists")
+        .select("*, shopping_list_items(*)")
+        .eq("id", createdList.id)
+        .single();
+
+      return NextResponse.json({ ...fullList, items: fullList?.shopping_list_items ?? [] });
+    }
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("shopping_list_items")
+      .insert({
+        shopping_list_id: listId,
+        name,
+        quantity,
+        unit,
+        category: category ?? "autres",
+        is_checked: false,
+        is_manual: true,
+      })
+      .select();
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
+
+    const { data: fullList } = await supabase
+      .from("shopping_lists")
+      .select("*, shopping_list_items(*)")
+      .eq("id", listId)
+      .single();
+
+    return NextResponse.json({ ...fullList, items: fullList?.shopping_list_items ?? [] });
+  }
+
+  if (mode === "remove") {
+    if (!itemId) {
+      return NextResponse.json({ error: "itemId requis" }, { status: 400 });
+    }
+
+    const { error } = await supabase.from("shopping_list_items").delete().eq("id", itemId);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!currentList) {
+      return NextResponse.json({ id: null, user_id: user.id, meal_plan_id: null, name: "Liste de courses", items: [] });
+    }
+
+    const { data: fullList } = await supabase
+      .from("shopping_lists")
+      .select("*, shopping_list_items(*)")
+      .eq("id", currentList.id)
+      .single();
+
+    return NextResponse.json({ ...fullList, items: fullList?.shopping_list_items ?? [] });
+  }
+
+  return NextResponse.json({ error: "mode invalide" }, { status: 400 });
 }
 
 export async function POST(request: Request) {
